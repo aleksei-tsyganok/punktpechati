@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Пункт Печати — онлайн заказ печати</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,600;0,14..32,700;1,14..32,400&display=swap" rel="stylesheet">
+<!-- Подключаем надежную JS-библиотеку Яндекс Карт -->
+<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
+
+<style>
+
+:root {
+  --grad: linear-gradient(120deg, #ffd60a 0%, #ff9f0a 18%, #ff375f 38%, #bf5af2 60%, #64d2ff 80%, #30d158 100%);
+  --grad-btn: linear-gradient(120deg, #ffd60a, #ff375f, #bf5af2, #64d2ff);
+  --bg: #000000;
+  --surface: #111111;
+  --surface2: #1a1a1a;
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.14);
+  --text: #ffffff;
+  --text-muted: rgba(255,255,255,0.48);
+  --accent: #64d2ff;
+}
+
+*{box-sizing:border-box;}
+
+body{
+  margin:0;
+  font-family:Inter, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* HEADER */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+}
+
+.header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-img {
+  height: 44px;
+  width: auto;
+  display: block;
+}
+
+.header-tagline {
+  font-size: 13px;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.container{
+  max-width:1100px;
+  margin:0 auto;
+  padding: 48px 20px 60px;
+}
+
+/* HERO */
+.hero-title {
+  font-size: clamp(28px, 5vw, 44px);
+  font-weight: 700;
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.hero-title span {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-sub {
+  font-size: 15px;
+  color: var(--text-muted);
+  margin: 0 0 40px;
+}
+
+/* GRADIENT LINE */
+.grad-line {
+  height: 2px;
+  background: var(--grad);
+  border-radius: 2px;
+  margin-bottom: 40px;
+  opacity: 0.7;
+}
+
+/* BUTTON */
+.btn{
+  position: relative;
+  padding: 13px 18px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  display: inline-block;
+  margin-top: 16px;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  color: #000;
+  background: var(--grad-btn);
+  background-size: 200%;
+  transition: opacity 0.2s, transform 0.15s;
+  letter-spacing: 0.01em;
+}
+
+.btn:hover{
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* MAP LAYOUT */
+.layout{
+  display:grid;
+  grid-template-columns:1fr 2fr;
+  gap:20px;
+  margin-top:0;
+}
+
+.branches-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.card{
+  background: var(--surface);
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: border-color 0.18s, background 0.18s;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--grad);
+  opacity: 0;
+  transition: opacity 0.18s;
+  border-radius: inherit;
+}
+
+.card:hover {
+  border-color: var(--border-hover);
+}
+
+.card.active {
+  border-color: transparent;
+  background: var(--surface2);
+}
+
+.card.active::before {
+  opacity: 0.08;
+}
+
+.card-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.card strong { font-size: 14px; font-weight: 600; }
+
+/* Active indicator dot */
+.card.active .card-inner::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--grad-btn);
+  margin-right: 8px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+/* MAP */
+.map {
+  width:100%;
+  height:450px;
+  border-radius:14px;
+  background: var(--surface);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+
+/* UPLOAD */
+.upload{
+  margin-top:32px;
+  background: var(--surface);
+  padding: 28px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+}
+
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0 0 14px;
+}
+
+.upload h2{
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 20px;
+  letter-spacing: -0.01em;
+}
+
+input, textarea{
+  width:100%;
+  padding:12px 14px;
+  margin-top:10px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.18s;
+}
+
+input:focus, textarea:focus {
+  border-color: rgba(100, 210, 255, 0.45);
+}
+
+input[type="file"] {
+  background: var(--surface2);
+  border: 1.5px dashed rgba(100, 210, 255, 0.25);
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+textarea {
+  height: 90px;
+  resize: vertical;
+}
+
+/* BUTTONS ROW */
+.btn-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.send{
+  flex: 1;
+  min-width: 140px;
+  background: var(--grad-btn);
+  background-size: 200%;
+  border: none;
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #000;
+  transition: opacity 0.2s, transform 0.15s;
+  font-family: Inter, sans-serif;
+}
+
+.send:hover{
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+.small{
+  font-size:13px;
+  color: var(--text-muted);
+  margin-top: 5px;
+  line-height: 1.5;
+}
+
+.info-block {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.selected-branch {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.selected-branch strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+#selected-branch-text {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .map {
+    height: 320px;
+  }
+  .hero-title { font-size: 26px; }
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <img src="assets/logo.png" alt="Пункт Печати" class="logo-img">
+    <span class="header-tagline">Онлайн заказ печати</span>
+  </div>
+</header>
+
+<div class="container">
+
+<h1 class="hero-title">Выберите <span>удобный филиал</span></h1>
+<p class="hero-sub">Сайт автоматически определяет ближайшее отделение по геолокации</p>
+<div class="grad-line"></div>
+
+<div class="layout">
+
+  <!-- LIST -->
+  <div>
+    <div class="branches-label">Филиалы</div>
+
+    <div id="card-0" class="card active" onclick="setBranch(0)">
+      <div class="card-inner">
+        <strong>Яковлева 46</strong>
+        <div class="small">Октябрьский</div>
+      </div>
+    </div>
+
+    <div id="card-1" class="card" onclick="setBranch(1)">
+      <div class="card-inner">
+        <strong>Краснодарская 37</strong>
+        <div class="small">Советский</div>
+      </div>
+    </div>
+
+    <div id="card-2" class="card" onclick="setBranch(2)">
+      <div class="card-inner">
+        <strong>Калинина 181</strong>
+        <div class="small">Железнодорожный</div>
+      </div>
+    </div>
+
+    <div id="card-3" class="card" onclick="setBranch(3)">
+      <div class="card-inner">
+        <strong>Лесопарковая 15</strong>
+        <div class="small">Серебряный</div>
+      </div>
+    </div>
+
+    <button class="btn" onclick="findNearest()">
+      🎯 Ближайший филиал
+    </button>
+
+  </div>
+
+  <!-- MAP -->
+  <div id="map" class="map"></div>
+
+</div>
+
+<!-- UPLOAD -->
+<div class="upload">
+
+  <div class="section-label">Заказ</div>
+  <h2>Отправить файл на печать</h2>
+
+  <input type="file" id="file">
+  <textarea id="comment" placeholder="Комментарий (например: цветная печать A4, 2 экземпляра)"></textarea>
+
+  <div class="btn-row">
+    <button class="send" onclick="sendTelegram()">Отправить в Telegram</button>
+    <button class="send" onclick="sendEmail()">Отправить на почту</button>
+  </div>
+
+  <div class="info-block">
+    <p class="selected-branch">
+      <strong>Филиал для отправки:</strong>&nbsp;<span id="selected-branch-text">Яковлева 46</span>
+    </p>
+    <p class="small" style="margin-top:10px;">
+      Telegram: @punkt_pechati &nbsp;·&nbsp; Email: punkt.pechati@ya.ru
+    </p>
+  </div>
+
+</div>
+
+</div>
+
+<script>
+
+const branches = [
+  {name:"Яковлева 46", district:"Октябрьский", coords:null},
+  {name:"Краснодарская 37", district:"Советский", coords:null},
+  {name:"Калинина 181", district:"Железнодорожный", coords:null},
+  {name:"Лесопарковая 15", district:"Серебряный", coords:null},
+];
+
+let current = 0;
+let yandexMap;
+let placemarks = [null, null, null, null];
+
+ymaps.ready(function () {
+  yandexMap = new ymaps.Map('map', {
+    center: [56.0184, 92.8671],
+    zoom: 12,
+    controls: ['zoomControl']
+  });
+
+  function addPlacemark(b, i) {
+    var placemark = new ymaps.Placemark(b.coords || [56.0184, 92.8671], {
+      balloonContentHeader: '<b style="font-family:Inter,sans-serif;color:#111;">Пункт Печати</b>',
+      balloonContentBody: '<span style="font-family:Inter,sans-serif;color:#111;">' + b.name + '</span>'
+    }, {
+      preset: 'islands#cyanDotIcon'
+    });
+    placemark.events.add('click', function() { setBranch(i); });
+    yandexMap.geoObjects.add(placemark);
+    placemarks[i] = placemark;
+  }
+
+  var geocodeAll = branches.map(function(b, i) {
+    var url = 'https://nominatim.openstreetmap.org/search?q=' +
+      encodeURIComponent('Красноярск, ' + b.name) +
+      '&format=json&limit=1&countrycodes=ru';
+    return fetch(url)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data && data[0]) {
+          b.coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+        }
+        addPlacemark(b, i);
+      })
+      .catch(function() {
+        addPlacemark(b, i);
+      });
+  });
+
+  Promise.all(geocodeAll).then(function() {
+    if (branches[0].coords) {
+      yandexMap.setCenter(branches[0].coords, 14);
+    }
+  });
+});
+
+function setBranch(i){
+  current = i;
+
+  document.querySelectorAll(".card").forEach(x => x.classList.remove("active"));
+  document.getElementById(`card-${i}`).classList.add("active");
+  document.getElementById("selected-branch-text").innerText = branches[i].name;
+
+  if (yandexMap && branches[i].coords) {
+    yandexMap.setCenter(branches[i].coords, 16, {
+      checkZoomRange: true,
+      duration: 500
+    });
+    if (placemarks[i]) {
+      placemarks[i].balloon.open();
+    }
+  }
+}
+
+function findNearest(){
+  if(!navigator.geolocation){
+    alert("Геолокация не поддерживается вашим браузером");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(pos => {
+    const userLat = pos.coords.latitude;
+    const userLon = pos.coords.longitude;
+
+    let best = 0;
+    let min = Infinity;
+
+    branches.forEach((b, i) => {
+      if (!b.coords) return;
+      const dx = userLat - b.coords[0];
+      const dy = userLon - b.coords[1];
+      const dist = dx*dx + dy*dy;
+
+      if(dist < min){
+        min = dist;
+        best = i;
+      }
+    });
+
+    setBranch(best);
+    alert(`Ближайший к вам филиал определен: ${branches[best].name}`);
+  }, () => {
+    alert("Не удалось определить локацию автоматически. Пожалуйста, выберите филиал вручную.");
+  });
+}
+
+function sendTelegram(){
+  const fileInput = document.getElementById("file");
+  if(!fileInput.files.length){
+	alert("Пожалуйста, выберите файл для отправки.");
+	return;
+  }
+  const file = fileInput.files[0];
+  alert(`Файл "${file.name}" готов к отправке в филиал "${branches[current].name}".`);
+}
+
+function sendEmail(){
+  const fileInput = document.getElementById("file");
+  if(!fileInput.files.length){
+	alert("Пожалуйста, выберите файл.");
+	return;
+  }
+  alert("Для интеграции почты необходим серверный скрипт.");
+}
+
+</script>
+
+</body>
+</html>
