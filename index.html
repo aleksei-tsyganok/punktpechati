@@ -356,6 +356,49 @@ textarea {
 
 
 
+/* СТИЛИ ДЛЯ СЕКЦИИ УСЛУГ */
+.services-section {
+  margin-top: 48px;
+}
+
+.services-heading {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  letter-spacing: -0.01em;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.service-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.service-card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+}
+
+.service-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+.service-desc {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
 
 
 
@@ -393,48 +436,128 @@ textarea {
     <span class="header-tagline">Пункт Печати в Красноярске</span>
   </div>
 </header>
-
-
-
-
-
-
-
-
-
-
-     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	
-
-
-
 	
 <div class="container">
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Пункт Печати в Красноярске</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,600;0,14..32,700;1,14..32,400&display=swap" rel="stylesheet">
+<!-- Подключаем надежную JS-библиотеку Яндекс Карт -->
+<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
+
+<style>
+
+:root {
+  --grad: linear-gradient(120deg, #ffd60a 0%, #ff9f0a 18%, #ff375f 38%, #bf5af2 60%, #64d2ff 80%, #30d158 100%);
+  --grad-btn: linear-gradient(120deg, #ffd60a, #ff375f, #bf5af2, #64d2ff);
+  --bg: #000000;
+  --surface: #111111;
+  --surface2: #1a1a1a;
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.14);
+  --text: #ffffff;
+  --text-muted: rgba(255,255,255,0.48);
+  --accent: #64d2ff;
+}
+
+*{box-sizing:border-box;}
+
+body{
+  margin:0;
+  font-family:Inter, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* HEADER */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+}
+
+.header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-img {
+  height: 44px;
+  width: auto;
+  display: block;
+}
+
+.header-tagline {
+  font-size: 13px;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.container{
+  max-width:1100px;
+  margin:0 auto;
+  padding: 48px 20px 60px;
+}
+
+/* HERO */
+.hero-title {
+  font-size: clamp(28px, 5vw, 44px);
+  font-weight: 700;
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.hero-title span {
+  background: var(--grad);
+  -webkit-background-clip: text;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
 
 <h1 class="hero-title">Выберите <span>удобный филиал</span></h1>
 <p class="hero-sub">Сайт автоматически определяет ближайшее отделение по геолокации</p>
