@@ -1412,6 +1412,13 @@ textarea {
 
 </div>
 
+
+
+
+
+
+
+	
 <!-- UPLOAD -->
 <div class="upload">
 
@@ -1419,26 +1426,57 @@ textarea {
   <h2>Отправить файл на печать</h2>
 
   <input type="file" id="file">
-  <textarea id="comment" placeholder="Комментарий (например: цветная печать A4, 2 экземпляра)"></textarea>
+
+  <textarea
+    id="comment"
+    placeholder="Комментарий (например: цветная печать A4, 2 экземпляра)">
+  </textarea>
 
   <div class="btn-row">
-    <button class="send" onclick="sendTelegram()">Отправить в Telegram</button>
-    <button class="send" onclick="sendEmail()">Отправить на почту</button>
+
+    <a
+      href="https://t.me/punkt_pechati"
+      target="_blank"
+      class="send"
+      style="text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center;">
+      Отправить в Telegram
+    </a>
+
+    <a
+      href="mailto:punkt.pechati@ya.ru?subject=Заказ на печать"
+      class="send"
+      style="text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center;">
+      Отправить на почту
+    </a>
+
   </div>
 
   <div class="info-block">
     <p class="selected-branch">
-      <strong>Филиал для отправки:</strong>&nbsp;<span id="selected-branch-text">Яковлева 46</span>
+      <strong>Выбранный филиал:</strong>
+      <span id="selected-branch-text">Яковлева 46</span>
     </p>
+
     <p class="small" style="margin-top:10px;">
-      Telegram: @punkt_pechati &nbsp;·&nbsp; Email: punkt.pechati@ya.ru
+      Telegram: @punkt_pechati · Email: punkt.pechati@ya.ru
     </p>
   </div>
 
 </div>
 
-</div>
+ 
 
+
+
+
+
+
+
+
+
+
+
+	
 <script>
 
 const branches = [
