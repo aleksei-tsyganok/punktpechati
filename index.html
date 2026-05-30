@@ -858,24 +858,7 @@ function findNearest(){
   });
 }
 
-function sendTelegram(){
-  const fileInput = document.getElementById("file");
-  if(!fileInput.files.length){
-	alert("Пожалуйста, выберите файл для отправки.");
-	return;
-  }
-  const file = fileInput.files[0];
-  alert(`Файл "${file.name}" готов к отправке в филиал "${branches[current].name}".`);
-}
 
-function sendEmail(){
-  const fileInput = document.getElementById("file");
-  if(!fileInput.files.length){
-	alert("Пожалуйста, выберите файл.");
-	return;
-  }
-  alert("Для интеграции почты необходим серверный скрипт.");
-}
 
 </script>
 
