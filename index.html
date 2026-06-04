@@ -813,6 +813,19 @@ textarea { height: 90px; resize: vertical; }
     <textarea id="chat-input" placeholder="Например: сколько стоит распечатать 10 страниц А4?" style="height:52px; margin-top:0; resize:none; flex:1;" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); sendChat();}"></textarea>
     <button onclick="sendChat()" class="send" style="width:auto; flex-shrink:0; padding:14px 22px; margin-top:0; border-radius:12px;" id="chat-send-btn">Отправить</button>
   </div>
+
+<style>
+@media (max-width: 768px) {
+  #chat-input {
+    height: 80px !important;
+    font-size: 16px !important;
+  }
+  #chat-send-btn {
+    padding: 14px 16px !important;
+    font-size: 13px !important;
+  }
+}
+</style>
 </div>
 
 <style>
