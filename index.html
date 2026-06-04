@@ -80,15 +80,17 @@
 <style>
 
 :root {
-  --grad: linear-gradient(120deg, #ffd60a 0%, #ff9f0a 18%, #ff375f 38%, #bf5af2 60%, #64d2ff 80%, #30d158 100%);
-  --grad-btn: linear-gradient(120deg, #ffd60a, #ff375f, #bf5af2, #64d2ff);
-  --bg: #000000;
+  --grad: linear-gradient(135deg, #ffd60a 0%, #ff9f0a 20%, #ff375f 42%, #bf5af2 65%, #64d2ff 85%, #30d158 100%);
+  --grad-btn: linear-gradient(135deg, #ffd60a, #ff375f, #bf5af2, #64d2ff);
+  --bg: #080808;
   --surface: #111111;
-  --surface2: #1a1a1a;
-  --border: rgba(255,255,255,0.06);
-  --border-hover: rgba(255,255,255,0.14);
-  --text: #ffffff;
-  --text-muted: rgba(255,255,255,0.48);
+  --surface2: #181818;
+  --surface3: #1f1f1f;
+  --border: rgba(255,255,255,0.07);
+  --border-hover: rgba(255,255,255,0.16);
+  --text: #f0f0f0;
+  --text-muted: rgba(255,255,255,0.44);
+  --text-dim: rgba(255,255,255,0.25);
   --accent: #64d2ff;
 }
 
@@ -96,7 +98,7 @@
 
 body{
   margin:0;
-  font-family:Inter, sans-serif;
+  font-family: Inter, sans-serif;
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
@@ -107,9 +109,9 @@ body{
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(0,0,0,0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(8,8,8,0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border-bottom: 1px solid var(--border);
   padding: 0 20px;
 }
@@ -124,30 +126,33 @@ body{
 }
 
 .logo-img {
-  height: 44px;
+  height: 40px;
   width: auto;
   display: block;
 }
 
 .header-tagline {
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--text-muted);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .container{
   max-width:1100px;
   margin:0 auto;
-  padding: 48px 20px 60px;
+  padding: 56px 20px 80px;
 }
 
-/* HERO */
+/* HERO TITLES */
 .hero-title {
-  font-size: clamp(28px, 5vw, 44px);
+  font-family: Inter, sans-serif;
+  font-size: clamp(24px, 4vw, 40px);
   font-weight: 700;
-  margin: 0 0 8px;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
+  margin: 0 0 10px;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
 }
 
 .hero-title span {
@@ -159,46 +164,50 @@ body{
 
 .hero-sub {
   font-size: 15px;
+  font-weight: 400;
   color: var(--text-muted);
-  margin: 0 0 40px;
+  margin: 0 0 36px;
+  line-height: 1.6;
 }
 
 /* GRADIENT LINE */
 .grad-line {
-  height: 2px;
+  height: 1px;
   background: var(--grad);
-  border-radius: 2px;
+  border-radius: 1px;
   margin-bottom: 40px;
-  opacity: 0.7;
+  opacity: 0.5;
 }
 
 /* BUTTON */
 .btn{
   position: relative;
-  padding: 13px 18px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 14px;
-  display: inline-block;
+  padding: 14px 20px;
+  border-radius: 14px;
+  font-family: Inter, sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   margin-top: 16px;
   border: none;
   cursor: pointer;
   width: 100%;
   color: #000;
   background: var(--grad-btn);
-  background-size: 200%;
-  transition: opacity 0.2s, transform 0.15s;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
 }
 
 .btn:hover{
-  opacity: 0.88;
-  transform: translateY(-1px);
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(191,90,242,0.25);
 }
 
-.btn:active {
-  transform: translateY(0);
-}
+.btn:active { transform: translateY(0); }
 
 /* MAP LAYOUT */
 .layout{
@@ -209,22 +218,22 @@ body{
 }
 
 .branches-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 12px;
+  color: var(--text-dim);
+  margin-bottom: 14px;
 }
 
 .card{
   background: var(--surface);
   padding: 14px 16px;
-  border-radius: 12px;
+  border-radius: 14px;
   margin-bottom: 8px;
   cursor: pointer;
   border: 1px solid var(--border);
-  transition: border-color 0.18s, background 0.18s;
+  transition: border-color 0.18s, background 0.18s, transform 0.15s;
   position: relative;
   overflow: hidden;
 }
@@ -241,6 +250,7 @@ body{
 
 .card:hover {
   border-color: var(--border-hover);
+  transform: translateX(3px);
 }
 
 .card.active {
@@ -248,23 +258,20 @@ body{
   background: var(--surface2);
 }
 
-.card.active::before {
-  opacity: 0.08;
-}
+.card.active::before { opacity: 0.09; }
 
 .card-inner {
   position: relative;
   z-index: 1;
 }
 
-.card strong { font-size: 14px; font-weight: 600; }
+.card strong { font-size: 14px; font-weight: 700; }
 
-/* Active indicator dot */
 .card.active .card-inner::before {
   content: '';
   display: inline-block;
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--grad-btn);
   margin-right: 8px;
@@ -277,28 +284,39 @@ body{
 .map {
   width:100%;
   height:450px;
-  border-radius:14px;
+  border-radius:16px;
   background: var(--surface);
   overflow: hidden;
   border: 1px solid var(--border);
 }
 
-
 /* UPLOAD */
 .upload{
   margin-top:32px;
   background: var(--surface);
-  padding: 28px;
-  border-radius: 16px;
+  padding: 36px;
+  border-radius: 20px;
   border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.upload::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 240px; height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(191,90,242,0.12) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .section-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text-dim);
   margin: 0 0 14px;
 }
 
@@ -329,43 +347,46 @@ input:focus, textarea:focus {
 
 input[type="file"] {
   background: var(--surface2);
-  border: 1.5px dashed rgba(100, 210, 255, 0.25);
+  border: 1.5px dashed rgba(100, 210, 255, 0.2);
   cursor: pointer;
   color: var(--text-muted);
 }
 
-textarea {
-  height: 90px;
-  resize: vertical;
-}
+textarea { height: 90px; resize: vertical; }
 
 /* BUTTONS ROW */
 .btn-row {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
   margin-top: 16px;
 }
 
 .send{
   flex: 1;
-  min-width: 140px;
+  min-width: 160px;
   background: var(--grad-btn);
-  background-size: 200%;
   border: none;
-  padding: 12px 20px;
-  font-weight: 600;
+  padding: 14px 22px;
+  font-family: Inter, sans-serif;
+  font-weight: 700;
   font-size: 14px;
-  border-radius: 10px;
+  border-radius: 14px;
   cursor: pointer;
   color: #000;
-  transition: opacity 0.2s, transform 0.15s;
-  font-family: Inter, sans-serif;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  letter-spacing: 0.01em;
 }
 
 .send:hover{
-  opacity: 0.85;
-  transform: translateY(-1px);
+  opacity: 0.88;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(100,210,255,0.2);
+}
+
+.send:hover{
+  opacity: 0.88;
+  transform: translateY(-2px);
 }
 
 .small{
@@ -376,8 +397,8 @@ textarea {
 }
 
 .info-block {
-  margin-top: 20px;
-  padding-top: 16px;
+  margin-top: 24px;
+  padding-top: 20px;
   border-top: 1px solid var(--border);
 }
 
@@ -400,83 +421,84 @@ textarea {
 }
 
 @media (max-width: 768px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
-  .map {
-    height: 320px;
-  }
-  .hero-title { font-size: 26px; }
+  .layout { grid-template-columns: 1fr; }
+  .map { height: 300px; }
+  .hero-title { font-size: 22px; }
+  .upload { padding: 24px; }
+  .btn-row { flex-direction: column; }
 }
 
-
-
-
-
-
-
-
-
-/* СТИЛИ ДЛЯ СЕКЦИИ УСЛУГ */
-.services-section {
-  margin-top: 0px;
-}
+/* SERVICES SECTION */
+.services-section { margin-top: 0; }
 
 .services-heading {
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 24px;
-  letter-spacing: -0.01em;
+  font-family: Inter, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 28px;
+  letter-spacing: -0.02em;
 }
 
 .services-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
 }
 
 .service-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 24px;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  border-radius: 16px;
+  padding: 28px 24px;
+  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.service-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--grad);
+  opacity: 0;
+  transition: opacity 0.25s;
 }
 
 .service-card:hover {
   border-color: var(--border-hover);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  background: var(--surface2);
+}
+
+.service-card:hover::after { opacity: 0.8; }
+
+.service-icon {
+  font-size: 26px;
+  margin-bottom: 14px;
+  display: block;
+  line-height: 1;
 }
 
 .service-title {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   margin: 0 0 8px 0;
+  letter-spacing: -0.01em;
 }
 
 .service-desc {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-muted);
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.55;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-/* ПОДВАЛ САЙТА (FOOTER) */
+/* FOOTER */
 .footer {
   background: var(--surface);
   border-top: 1px solid var(--border);
-  padding: 40px 20px;
+  padding: 48px 20px;
   margin-top: 60px;
 }
 
@@ -486,19 +508,17 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  gap: 24px;
+  gap: 28px;
 }
 
-.footer-brand {
-  flex: 1;
-  min-width: 250px;
-}
+.footer-brand { flex: 1; min-width: 250px; }
 
 .footer-logo {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0 0 8px 0;
-  letter-spacing: -0.01em;
+  font-family: Inter, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+  letter-spacing: -0.02em;
 }
 
 .footer-logo span {
@@ -510,35 +530,54 @@ textarea {
 .footer-text {
   font-size: 13px;
   color: var(--text-muted);
-  line-height: 1.5;
+  line-height: 1.6;
   margin: 0;
 }
 
 .footer-contacts {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .footer-link {
   font-size: 14px;
+  font-weight: 500;
   color: var(--text);
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
-.footer-link:hover {
-  color: var(--accent);
-}
+.footer-link:hover { color: var(--accent); }
 
 .footer-copy {
   width: 100%;
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--text-dim);
   border-top: 1px solid rgba(255,255,255,0.04);
   padding-top: 20px;
   margin-top: 16px;
 }
+
+
+
+
+
+/* end styles */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -569,7 +608,9 @@ textarea {
 <!-- HEADER -->
 <header class="header">
   <div class="header-inner">
-    <img src="assets/logo.png" alt="Пункт Печати" class="logo-img">
+    <div style="width:44px; height:44px; border-radius:10px; background:var(--surface2); border:1px solid var(--border-hover); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+      <span style="font-family:Inter,sans-serif; font-size:17px; font-weight:700; background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; letter-spacing:-0.03em;">ПП</span>
+    </div>
     <span class="header-tagline">Пункт Печати в Красноярске</span>
   </div>
 </header>
@@ -583,15 +624,19 @@ textarea {
 
 <!-- БЛОК С УСЛУГАМИ -->
 <section class="services-section">
-  <h1 class="hero-title">Наши <span>услуги</span></h1>
-<p class="hero-sub">Быстрая качественная печать</p>
-	<div class="grad-line"></div>
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:10px;">
+    <h1 class="hero-title" style="margin:0;">Наши <span>услуги</span></h1>
+    <a href="tel:+79233344112" style="text-decoration:none; display:inline-flex; align-items:center; padding:12px 22px; border-radius:14px; background:var(--grad-btn); color:#000; font-family:Inter,sans-serif; font-size:13px; font-weight:700; letter-spacing:0.02em; transition:opacity 0.2s, transform 0.15s;" onmouseover="this.style.opacity='0.88';this.style.transform='translateY(-2px)'" onmouseout="this.style.opacity='1';this.style.transform='none'">
+      Позвонить
+    </a>
+  </div>
+  <p class="hero-sub">Быстрая качественная печать — рядом с вами</p>
+  <div class="grad-line"></div>
   <div class="services-grid">
     
     <div class="service-card">
-	  <h3 class="service-title">Печать А4</h3>
+      <h3 class="service-title">Печать А4</h3>
       <p class="service-desc">Черно-белая печать документов, рефератов и бланков.</p>
-
     </div>
 
     <div class="service-card">
@@ -661,6 +706,14 @@ textarea {
   <div>
     <div class="branches-label">Филиалы</div>
 
+    <button class="btn" onclick="findNearest()" style="margin-top:0; margin-bottom:8px;">
+      Ближайший филиал
+    </button>
+
+    <button class="btn" onclick="openRoute()" style="background: transparent; color: var(--text); border: 1px solid var(--border-hover); margin-top: 0; margin-bottom: 16px;">
+      Проложить маршрут
+    </button>
+
     <div id="card-0" class="card active" onclick="setBranch(0)">
       <div class="card-inner">
         <strong>Яковлева 46</strong>
@@ -689,10 +742,6 @@ textarea {
       </div>
     </div>
 
-    <button class="btn" onclick="findNearest()">
-      🎯 Ближайший филиал
-    </button>
-
   </div>
 
   <!-- MAP -->
@@ -705,7 +754,8 @@ textarea {
 
   <div class="section-label">Заказ</div>
   <h1 class="hero-title">Отправить <span>файл на печать</span></h1>
-	<div class="grad-line"></div>
+  <p class="hero-sub" style="margin-bottom:24px;">Пришлите файл в Telegram или на почту — мы распечатаем к вашему приходу</p>
+  <div class="grad-line" style="margin-bottom:28px;"></div>
 
   <div class="btn-row">
 
@@ -713,14 +763,14 @@ textarea {
       href="https://t.me/punkt_pechati"
       target="_blank"
       class="send"
-      style="text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center;">
+      style="text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;">
       Отправить в Telegram
     </a>
 
     <a
       href="mailto:punkt.pechati@ya.ru?subject=Заказ на печать"
       class="send"
-      style="text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center;">
+      style="text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;">
       Отправить на почту
     </a>
 
@@ -733,7 +783,7 @@ textarea {
     </p>
 
     <p class="small" style="margin-top:10px;">
-      · Telegram: @punkt_pechati <br> · Email: punkt.pechati@ya.ru
+      · Telegram: @punkt_pechati &nbsp;&nbsp; · Email: punkt.pechati@ya.ru
     </p>
   </div>
 
@@ -763,8 +813,10 @@ ymaps.ready(function () {
   yandexMap = new ymaps.Map('map', {
     center: [56.0184, 92.8671],
     zoom: 12,
-    controls: ['zoomControl']
+    controls: ['zoomControl'],
+    type: 'yandex#map'
   });
+  yandexMap.panes.get('ground').getElement().style.filter = 'invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9)';
 
   function addPlacemark(b, i) {
     var placemark = new ymaps.Placemark(b.coords || [56.0184, 92.8671], {
@@ -818,6 +870,12 @@ function setBranch(i){
       placemarks[i].balloon.open();
     }
   }
+}
+
+function openRoute() {
+  const b = branches[current];
+  const query = encodeURIComponent('Красноярск, ' + b.name);
+  window.open('https://yandex.ru/maps/62/krasnoyarsk/?text=' + query + '&rtext=~' + (b.coords ? b.coords[0] + ',' + b.coords[1] : query) + '&rtt=auto', '_blank');
 }
 
 function findNearest(){
