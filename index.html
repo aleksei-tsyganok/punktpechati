@@ -734,30 +734,42 @@ textarea { height: 90px; resize: vertical; }
     </button>
 
     <div id="card-0" class="card active" onclick="setBranch(0)">
-      <div class="card-inner">
-        <strong>Яковлева 46</strong>
-        <div class="small">Железнодорожный</div>
+      <div class="card-inner" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <strong>Яковлева 46</strong>
+          <div class="small">Железнодорожный</div>
+        </div>
+        <span id="status-0"></span>
       </div>
     </div>
 
     <div id="card-1" class="card" onclick="setBranch(1)">
-      <div class="card-inner">
-        <strong>Краснодарская 37</strong>
-        <div class="small">Советский</div>
+      <div class="card-inner" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <strong>Краснодарская 37</strong>
+          <div class="small">Советский</div>
+        </div>
+        <span id="status-1"></span>
       </div>
     </div>
 
     <div id="card-2" class="card" onclick="setBranch(2)">
-      <div class="card-inner">
-        <strong>Калинина 181</strong>
-        <div class="small">Октябрьский</div>
+      <div class="card-inner" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <strong>Калинина 181</strong>
+          <div class="small">Октябрьский</div>
+        </div>
+        <span id="status-2"></span>
       </div>
     </div>
 
     <div id="card-3" class="card" onclick="setBranch(3)">
-      <div class="card-inner">
-        <strong>Лесопарковая 15</strong>
-        <div class="small">Октябрьский</div>
+      <div class="card-inner" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <strong>Лесопарковая 15</strong>
+          <div class="small">Октябрьский</div>
+        </div>
+        <span id="status-3"></span>
       </div>
     </div>
 
@@ -970,7 +982,6 @@ function appendMessage(text, type) {
 <script>
 
 const branches = [
-  {name:"Яковлева 46", district:"Октябрьский", coords:null},
   {name:"Краснодарская 37", district:"Советский", coords:null},
   {name:"Калинина 181", district:"Октябрьский", coords:null},
   {name:"Лесопарковая 15", district:"Октябрьский", coords:null},
@@ -1191,5 +1202,38 @@ function findNearest(){
 
 
 	
+<style>
+.status-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.status-open { background: rgba(48,209,88,0.12); color: #30d158; border: 1px solid rgba(48,209,88,0.25); }
+.status-closed { background: rgba(255,55,95,0.1); color: #ff375f; border: 1px solid rgba(255,55,95,0.2); }
+</style>
+
+<script>
+(function() {
+  function renderStatus() {
+    const h = new Date().getHours();
+    const isOpen = h >= 9 && h < 21;
+    const text = isOpen ? 'Открыто до 21:00' : 'Закрыто до 09:00';
+    const cls = isOpen ? 'status-open' : 'status-closed';
+    for (let i = 0; i < 4; i++) {
+      const el = document.getElementById('status-' + i);
+      if (el) {
+        el.textContent = text;
+        el.className = 'status-badge ' + cls;
+      }
+    }
+  }
+  renderStatus();
+  setInterval(renderStatus, 60000);
+})();
+</script>
+
 </body>
 </html>
