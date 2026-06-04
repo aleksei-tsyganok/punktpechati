@@ -782,9 +782,16 @@ textarea { height: 90px; resize: vertical; }
       <span id="selected-branch-text">Яковлева 46</span>
     </p>
 
-    <p class="small" style="margin-top:10px;">
-      · Telegram: @punkt_pechati &nbsp;&nbsp; · Email: punkt.pechati@ya.ru
-    </p>
+    <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+      <a href="https://t.me/punkt_pechati" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border-radius:10px; background:var(--surface2); border:1px solid var(--border); color:var(--text); font-size:13px; font-weight:600; transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--border-hover)'" onmouseout="this.style.borderColor='var(--border)'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.7"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        @punkt_pechati
+      </a>
+      <a href="mailto:punkt.pechati@ya.ru" style="text-decoration:none; display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border-radius:10px; background:var(--surface2); border:1px solid var(--border); color:var(--text); font-size:13px; font-weight:600; transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--border-hover)'" onmouseout="this.style.borderColor='var(--border)'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.7"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        punkt.pechati@ya.ru
+      </a>
+    </div>
   </div>
 
 </div>
@@ -810,14 +817,14 @@ textarea { height: 90px; resize: vertical; }
   </div>
 
   <div style="display:flex; gap:10px; align-items:flex-end;">
-    <textarea id="chat-input" placeholder="Задайте вопрос..." style="height:52px; margin-top:0; resize:none; flex:1;" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); sendChat();}"></textarea>
+    <textarea id="chat-input" placeholder="Например: сколько стоит распечатать 10 страниц А4?" style="height:52px; margin-top:0; resize:none; flex:1;" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); sendChat();}"></textarea>
     <button onclick="sendChat()" class="send" style="width:auto; flex-shrink:0; padding:14px 22px; margin-top:0; border-radius:12px;" id="chat-send-btn">Отправить</button>
   </div>
 
 <style>
 @media (max-width: 768px) {
   #chat-input {
-    height: 80px !important;
+    height: 110px !important;
     font-size: 16px !important;
   }
   #chat-send-btn {
