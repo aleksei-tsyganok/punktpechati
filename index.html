@@ -445,6 +445,25 @@ textarea { height: 90px; resize: vertical; }
   gap: 14px;
 }
 
+@media (max-width: 768px) {
+  .services-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .service-card {
+    padding: 16px 14px !important;
+    border-radius: 12px !important;
+  }
+  .service-title {
+    font-size: 13px !important;
+    margin-bottom: 5px !important;
+  }
+  .service-desc {
+    font-size: 12px !important;
+    line-height: 1.45 !important;
+  }
+}
+
 .service-card {
   background: var(--surface);
   border: 1px solid var(--border);
