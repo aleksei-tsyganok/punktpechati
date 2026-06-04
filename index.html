@@ -796,6 +796,138 @@ textarea { height: 90px; resize: vertical; }
 
 	
 
+<!-- AI SUPPORT CHAT -->
+<div class="upload" style="margin-top:32px;">
+  <div class="section-label">Поддержка</div>
+  <h1 class="hero-title">Спросите <span>нашего ассистента</span></h1>
+  <p class="hero-sub" style="margin-bottom:24px;">Узнайте цену, уточните детали или задайте любой вопрос</p>
+  <div class="grad-line" style="margin-bottom:24px;"></div>
+
+  <div id="chat-messages" style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px; max-height:380px; overflow-y:auto; padding-right:4px;">
+    <div class="chat-msg assistant">
+      Привет! Я помогу с вопросами о наших услугах и ценах. Спрашивайте 😊
+    </div>
+  </div>
+
+  <div style="display:flex; gap:10px; align-items:flex-end;">
+    <textarea id="chat-input" placeholder="Например: сколько стоит распечатать 10 страниц А4?" style="height:52px; margin-top:0; resize:none; flex:1;" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); sendChat();}"></textarea>
+    <button onclick="sendChat()" class="send" style="width:auto; flex-shrink:0; padding:14px 22px; margin-top:0; border-radius:12px;" id="chat-send-btn">Отправить</button>
+  </div>
+</div>
+
+<style>
+.chat-msg {
+  max-width: 85%;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.chat-msg.assistant {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+.chat-msg.user {
+  background: var(--surface3);
+  border: 1px solid var(--border-hover);
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+  color: var(--text);
+}
+.chat-msg.typing {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  align-self: flex-start;
+  color: var(--text-muted);
+  font-style: italic;
+}
+#chat-messages::-webkit-scrollbar { width: 4px; }
+#chat-messages::-webkit-scrollbar-track { background: transparent; }
+#chat-messages::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 2px; }
+</style>
+
+<script>
+const chatHistory = [];
+const SYSTEM_PROMPT = `Ты — вежливый ассистент пункта печати «Пункт Печати» в Красноярске. Отвечай коротко и по делу, только на русском языке.
+
+Актуальный прайс-лист:
+- Печать А4 чёрно-белая (обычная бумага): 13 руб./лист
+- Цветная печать А4 (обычная бумага): 40 руб./лист
+- Печать А4 на фотобумаге глянец: 70 руб./лист
+- Печать А4 на фотобумаге мат: 70 руб./лист
+- Печать А4 на фотобумаге сатин: 85 руб./лист
+- Печать А4 на самоклеющейся бумаге: 100 руб./лист
+- Печать фото 10×15 (на любой фотобумаге): 45 руб./шт.
+- Сканирование: 20 руб./лист
+- Файл (папка/скоросшиватель): 15 руб.
+- Корректировка и изменение документа: от 35 руб.
+
+Режим работы: ежедневно 09:00–21:00
+Контакты: Telegram @punkt_pechati, email punkt.pechati@ya.ru
+Филиалы: Яковлева 46, Краснодарская 37, Калинина 181, Лесопарковая 15
+
+Если спрашивают о количестве страниц — посчитай итоговую сумму. Не выдумывай услуги и цены которых нет в прайсе.`;
+
+const MISTRAL_KEY = 'U4fQYMINpwNwPZ7BYg7dhFEljnKsxkHa';
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const btn = document.getElementById('chat-send-btn');
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  btn.disabled = true;
+  btn.style.opacity = '0.5';
+
+  appendMessage(text, 'user');
+  chatHistory.push({ role: 'user', content: text });
+
+  const typing = appendMessage('Печатаю...', 'typing');
+
+  try {
+    const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + MISTRAL_KEY
+      },
+      body: JSON.stringify({
+        model: 'mistral-small-latest',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          ...chatHistory
+        ]
+      })
+    });
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content || 'Извините, не удалось получить ответ.';
+    chatHistory.push({ role: 'assistant', content: reply });
+    typing.remove();
+    appendMessage(reply, 'assistant');
+  } catch(e) {
+    typing.remove();
+    appendMessage('Произошла ошибка. Попробуйте ещё раз.', 'assistant');
+  }
+
+  btn.disabled = false;
+  btn.style.opacity = '1';
+}
+
+function appendMessage(text, type) {
+  const box = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + type;
+  div.textContent = text;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+</script>
+
+
 <script>
 
 const branches = [
