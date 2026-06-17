@@ -132,6 +132,13 @@
     font-family:var(--mono); font-size:15px; margin-top:8px; display:block;
     font-weight:600;
   }
+  .point-btn .pstats{
+    margin-top:10px; padding-top:10px; border-top:1px solid var(--line);
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .point-btn .pstat-row{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+  .point-btn .pstat-label{font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.03em;}
+  .point-btn .pstat-val{font-family:var(--mono); font-size:12.5px; color:var(--ink-soft); font-weight:500;}
 
   /* TABS */
   .tabs{
@@ -573,6 +580,17 @@ function currentBalance(point){
   return buildBalanceTimeline(point).lastBalance;
 }
 
+function avgRevenue(point, days){
+  const rows = calcBalances(point);
+  if(rows.length===0) return 0;
+  const today = todayStr();
+  const fromDate = addDaysStr(today, -(days-1));
+  const sum = rows
+    .filter(r=> r.date >= fromDate && r.date <= today)
+    .reduce((s,r)=> s + r.total, 0);
+  return sum / days;
+}
+
 function employeeSummary(point){
   const rows = calcBalances(point);
   const payouts = getPayouts(point);
@@ -634,12 +652,18 @@ function renderPointSwitcher(){
   for(const key in POINTS){
     const p = POINTS[key];
     const bal = currentBalance(key);
+    const avg30 = avgRevenue(key, 30);
+    const avg7 = avgRevenue(key, 7);
     const active = state.point===key ? 'active' : '';
     html += `
       <button class="point-btn ${active}" data-point="${key}">
         <span class="pname"><span class="dot" style="background:${p.color}"></span>${p.name}</span>
         <span class="psub">${p.sub}</span>
         <span class="pbalance">${fmtMoney(bal)}</span>
+        <span class="pstats">
+          <span class="pstat-row"><span class="pstat-label">Средняя за 30 дн</span><span class="pstat-val">${fmtMoney(avg30)}/день</span></span>
+          <span class="pstat-row"><span class="pstat-label">Средняя за 7 дн</span><span class="pstat-val">${fmtMoney(avg7)}/день</span></span>
+        </span>
       </button>`;
   }
   html += '</div>';
