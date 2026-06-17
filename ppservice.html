@@ -424,9 +424,27 @@ function fmt(n){
   return n.toLocaleString('ru-RU', {minimumFractionDigits:0, maximumFractionDigits:2});
 }
 function fmtMoney(n){ return fmt(n) + ' ₽'; }
+function dateToLocalStr(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
 function todayStr(){
-  const d = new Date();
-  return d.toISOString().slice(0,10);
+  return dateToLocalStr(new Date());
+}
+function addDaysStr(dateStr, days){
+  const d = new Date(dateStr+'T00:00:00');
+  d.setDate(d.getDate()+days);
+  return dateToLocalStr(d);
+}
+function nextZReport(lastZ){
+  if(!lastZ) return '';
+  const match = String(lastZ).match(/^(\d+)$/);
+  if(!match) return '';
+  const digits = match[1];
+  const next = String(parseInt(digits,10)+1);
+  return next.padStart(digits.length, '0');
 }
 function weekday(dateStr){
   const days = ['вс','пн','вт','ср','чт','пт','сб'];
@@ -658,13 +676,18 @@ function renderTabContent(){
 function renderEntry(){
   const point = state.point;
   const rows = calcBalances(point);
-  const existingDates = new Set(rows.map(r=>r.date));
   const today = todayStr();
-  const defaultDate = existingDates.has(today) ? '' : today;
+  const lastRow = rows.length ? rows[rows.length-1] : null;
+  let defaultDate = today;
+  if(lastRow){
+    const nextDate = addDaysStr(lastRow.date, 1);
+    defaultDate = nextDate > today ? today : nextDate;
+  }
+  const defaultZReport = lastRow ? nextZReport(lastRow.zReport) : '';
   const lastBalance = currentBalance(point);
-  const lastEmployee = rows.length ? rows[rows.length-1].employee : '';
-  const lastDeductPct = rows.length ? rows[rows.length-1].deductPct : (POINTS[point].acquiring ? 6 : 0);
-  const lastStaffPct = rows.length ? rows[rows.length-1].staffPct : 30;
+  const lastEmployee = lastRow ? lastRow.employee : '';
+  const lastDeductPct = lastRow ? lastRow.deductPct : (POINTS[point].acquiring ? 6 : 0);
+  const lastStaffPct = lastRow ? lastRow.staffPct : 30;
 
   const employees = (DB.employees||[]).filter(e=>!e.archived).map(e=>e.name);
 
@@ -690,12 +713,12 @@ function renderEntry(){
 
     <div class="field">
       <label>Дата</label>
-      <input type="date" id="f-date" value="${defaultDate || today}" max="${today}">
+      <input type="date" id="f-date" value="${defaultDate}" max="${today}">
     </div>
 
     <div class="field">
       <label>Номер Z-отчёта</label>
-      <input type="text" id="f-zreport" inputmode="numeric" placeholder="например, 0042">
+      <input type="text" id="f-zreport" inputmode="numeric" placeholder="например, 0042" value="${defaultZReport}">
     </div>
 
     <div class="row2">
