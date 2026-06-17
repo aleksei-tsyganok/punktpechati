@@ -6,13 +6,16 @@
 <title>Пункт Печати — учёт касс</title>
 <link rel="icon" type="image/png" href="data:image/png;base64,AAABAAEAEBAAAAAAIABEAgAAFgAAAIlQTkcNChoKAAAADUlIRFIAAAAQAAAAEAgGAAAAH/P/YQAAAgtJREFUeJyVk81qFEEUhc+pqp6eTmcyaTASTCK6ciMouFHUnZIHCG59CBHxBVz6Cq4FXbhxKUgyG7PRCK4kihATjGY0ySQzXT11r4vuHicKRu+mfqjv3lO3TjFN05ONRuMJgOsog/h7aDWueO9vMcuyFZLXVFUAmGPgOoSkUdUOsyxTAP8Dj5IAMG4ctuSYfiKoKgAaGgAECChURQIrRtx45W4+hFAAI4AKWjamQnBQ9EBVGAEcLZN4qkaMY9UVa+DvX5wNM3kr4X6C3GT6uPuua6J28+bsYtp3bfg0xuewsbu89qhBMEFdXRUAtHhw5fSPM5PxRmfvW35v/saXS5Onuhemz+d3z935tLb9an+mfXbv9uLDr6JyWCnQkXwFiEHA853t3tPv63JY7Oe5hKiQwm31tw5efnzm326+8P1BnwoZcb91nmgbZ52LYUnDMq9aWmtiyySa+sMj7siqYTUyJgxVEdumRKQqnbZcK4gGtdbqRJwIfpkJtQ9AIlw+kYb1XT/cHOTNq60F/36wA9jEzSVz/nX3TTTTmsd0e2H4YXM1IumOJACA3lDQtEREoiceMUubFFJgwk2gCB4heMRRinEFYdxIogoFYECUM4IkRAUEARKl60s31kYSACboSAxkdE2FVvsKrd8cNWMAdEjWSf41pGI6xnu/pKrLKL+xHgOiOkNVXfbeL/0ElaHvBmWEOX0AAAAASUVORK5CYII=">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --paper:#0B0B0F;
     --paper-2:rgba(255,255,255,0.06);
-    --ink:#F2F1F4;
-    --ink-soft:#A7A5AD;
-    --ink-faint:#75737B;
+    --ink:#FAFAFB;
+    --ink-soft:#BFBDC6;
+    --ink-faint:#8B8993;
     --line:rgba(255,255,255,0.10);
     --line-strong:rgba(255,255,255,0.18);
     --green:#3DD68C;
@@ -27,9 +30,9 @@
     --glass-blur:blur(22px) saturate(160%);
     --radius:18px;
     --radius-sm:12px;
-    --mono: 'Roboto Mono', 'SF Mono', 'Consolas', monospace;
+    --mono: 'JetBrains Mono', 'SF Mono', monospace;
     --sans: 'Inter', -apple-system, 'Segoe UI', Arial, sans-serif;
-    --serif: 'Source Serif Pro', Georgia, serif;
+    --serif: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
     --ink-grad: linear-gradient(100deg, #FF7445 0%, #F8418A 38%, #D953D8 64%, #A37FF6 100%);
   }
   *{box-sizing:border-box;}
@@ -74,10 +77,10 @@
   }
   .brand h1{
     font-family:var(--serif);
-    font-weight:600;
+    font-weight:800;
     font-size:25px;
     margin:0;
-    letter-spacing:-0.01em;
+    letter-spacing:-0.02em;
     background:var(--ink-grad);
     -webkit-background-clip:text;
     background-clip:text;
@@ -189,12 +192,13 @@
   }
   .btn:hover{background:var(--green);}
   .btn.secondary{
-    background:var(--card); backdrop-filter:var(--glass-blur); -webkit-backdrop-filter:var(--glass-blur);
-    color:var(--ink); border:1px solid var(--line-strong);
+    background:var(--green-pale); backdrop-filter:var(--glass-blur); -webkit-backdrop-filter:var(--glass-blur);
+    color:var(--green); border:1px solid rgba(61,214,140,0.45);
+    box-shadow:0 0 0 1px rgba(61,214,140,0.08), 0 4px 16px rgba(61,214,140,0.10);
   }
-  .btn.secondary:hover{border-color:var(--green-deep); color:var(--green-deep);}
-  .btn.danger{background:transparent; color:var(--red); border:1px solid var(--red);}
-  .btn.danger:hover{background:var(--red-pale);}
+  .btn.secondary:hover{border-color:var(--green); color:var(--green); background:rgba(61,214,140,0.22); box-shadow:0 0 0 1px rgba(61,214,140,0.18), 0 6px 20px rgba(61,214,140,0.18);}
+  .btn.danger{background:var(--red-pale); color:var(--red); border:1px solid rgba(255,107,107,0.45);}
+  .btn.danger:hover{background:rgba(255,107,107,0.22); border-color:var(--red);}
   .btn:disabled{opacity:0.45; cursor:not-allowed;}
   .btnrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;}
 
@@ -238,6 +242,19 @@
   table.ledger tbody tr:hover{background:var(--paper-2);}
   table.ledger td.emp{font-family:var(--sans); text-align:left; color:var(--ink-soft); font-size:12.5px;}
   .tablewrap{overflow-x:auto; margin:0 -4px;}
+  .day-cards{display:none;}
+  .day-card{
+    border:1px solid var(--line); border-radius:var(--radius-sm);
+    padding:14px; margin-bottom:10px;
+  }
+  .day-card:last-child{margin-bottom:0;}
+  .dc-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+  .dc-date{font-family:var(--serif); font-weight:600; font-size:14px;}
+  .dc-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px 14px;}
+  .dc-item{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+  .dc-label{font-size:11px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.03em;}
+  .dc-val{font-family:var(--mono); font-size:13.5px; font-weight:600; text-align:right;}
+  .dc-emp{margin-top:10px; padding-top:10px; border-top:1px solid var(--line); font-size:12.5px; color:var(--ink-soft);}
   .rowdel{cursor:pointer; color:var(--ink-faint); font-size:13px;}
   .rowdel:hover{color:var(--red);}
   .zero{color:var(--ink-faint);}
@@ -320,11 +337,26 @@
   }
 
   @media (max-width:600px){
+    .app{padding:0 12px 90px;}
     .points{grid-template-columns:1fr; }
+    .row2{grid-template-columns:1fr 1fr; gap:10px;}
     .row3{grid-template-columns:1fr 1fr;}
-    header.top{flex-direction:column; align-items:flex-start;}
+    header.top{flex-direction:column; align-items:flex-start; padding:20px 0 14px;}
     .brand h1{font-size:21px;}
     .month-summary{gap:14px 22px;}
+    .card{padding:16px;}
+    .tabs{gap:0;}
+    .tab{padding:10px 11px; font-size:13px;}
+    input[type=date], input[type=number], input[type=text], select{
+      font-size:16px; padding:11px 12px;
+    }
+    .btn{padding:12px 18px; font-size:15px;}
+    .btn{min-height:44px; display:inline-flex; align-items:center; justify-content:center;}
+    .btnrow{gap:8px;}
+    .tablewrap{display:none;}
+    .day-cards{display:block;}
+    .metrics{grid-template-columns:1fr 1fr;}
+    .pin-dots{gap:18px;}
   }
 </style>
 </head>
@@ -757,7 +789,29 @@ function renderHistory(){
       <td><span class="rowdel" data-del="${r.date}" title="Удалить запись"><i class="ti ti-trash"></i></span></td>
     </tr>`;
   });
-  html += `</tbody></table></div></div>`;
+  html += `</tbody></table></div>`;
+
+  html += `<div class="day-cards">`;
+  monthRows.forEach(r=>{
+    html += `<div class="day-card" data-date="${r.date}">
+      <div class="dc-top">
+        <div class="dc-date">${weekday(r.date)} ${fmtDate(r.date)}</div>
+        <span class="rowdel" data-del="${r.date}" title="Удалить запись"><i class="ti ti-trash"></i></span>
+      </div>
+      <div class="dc-grid">
+        <div class="dc-item"><div class="dc-label">Нал</div><div class="dc-val ${r.cash?'':'zero'}">${fmt(r.cash)}</div></div>
+        <div class="dc-item"><div class="dc-label">Безнал</div><div class="dc-val ${r.cashless?'':'zero'}">${fmt(r.cashless)}</div></div>
+        <div class="dc-item"><div class="dc-label">Итого</div><div class="dc-val">${fmt(r.total)}</div></div>
+        <div class="dc-item"><div class="dc-label">Внесение</div><div class="dc-val ${r.deposit?'':'zero'}">${r.deposit?fmt(r.deposit):'—'}</div></div>
+        <div class="dc-item"><div class="dc-label">Изъятие</div><div class="dc-val ${r.withdrawal?'':'zero'}">${r.withdrawal?fmt(r.withdrawal):'—'}</div></div>
+        <div class="dc-item"><div class="dc-label">Остаток</div><div class="dc-val">${fmt(r.balance)}</div></div>
+        <div class="dc-item"><div class="dc-label">Z-отчёт</div><div class="dc-val ${r.zReport?'':'zero'}">${r.zReport||'—'}</div></div>
+        <div class="dc-item"><div class="dc-label">ЗП</div><div class="dc-val" title="вычет ${fmt(r.deductPct)}% · доля ${fmt(r.staffPct)}%">${fmt(r.salary)}</div></div>
+      </div>
+      <div class="dc-emp">${r.employee===PAID_MARK ? `<span style="color:var(--green-deep); font-weight:500;">${PAID_MARK}</span>` : (r.employee||'—')}</div>
+    </div>`;
+  });
+  html += `</div></div>`;
 
   return html;
 }
