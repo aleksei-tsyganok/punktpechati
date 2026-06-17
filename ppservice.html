@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Пункт Печати — учёт касс</title>
+<link rel="icon" type="image/png" href="data:image/png;base64,AAABAAEAEBAAAAAAIABEAgAAFgAAAIlQTkcNChoKAAAADUlIRFIAAAAQAAAAEAgGAAAAH/P/YQAAAgtJREFUeJyVk81qFEEUhc+pqp6eTmcyaTASTCK6ciMouFHUnZIHCG59CBHxBVz6Cq4FXbhxKUgyG7PRCK4kihATjGY0ySQzXT11r4vuHicKRu+mfqjv3lO3TjFN05ONRuMJgOsog/h7aDWueO9vMcuyFZLXVFUAmGPgOoSkUdUOsyxTAP8Dj5IAMG4ctuSYfiKoKgAaGgAECChURQIrRtx45W4+hFAAI4AKWjamQnBQ9EBVGAEcLZN4qkaMY9UVa+DvX5wNM3kr4X6C3GT6uPuua6J28+bsYtp3bfg0xuewsbu89qhBMEFdXRUAtHhw5fSPM5PxRmfvW35v/saXS5Onuhemz+d3z935tLb9an+mfXbv9uLDr6JyWCnQkXwFiEHA853t3tPv63JY7Oe5hKiQwm31tw5efnzm326+8P1BnwoZcb91nmgbZ52LYUnDMq9aWmtiyySa+sMj7siqYTUyJgxVEdumRKQqnbZcK4gGtdbqRJwIfpkJtQ9AIlw+kYb1XT/cHOTNq60F/36wA9jEzSVz/nX3TTTTmsd0e2H4YXM1IumOJACA3lDQtEREoiceMUubFFJgwk2gCB4heMRRinEFYdxIogoFYECUM4IkRAUEARKl60s31kYSACboSAxkdE2FVvsKrd8cNWMAdEjWSf41pGI6xnu/pKrLKL+xHgOiOkNVXfbeL/0ElaHvBmWEOX0AAAAASUVORK5CYII=">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons.min.css">
+<style>
+  :root{
+    --paper:#0B0B0F;
+    --paper-2:rgba(255,255,255,0.06);
+    --ink:#F2F1F4;
+    --ink-soft:#A7A5AD;
+    --ink-faint:#75737B;
+    --line:rgba(255,255,255,0.10);
+    --line-strong:rgba(255,255,255,0.18);
+    --green:#3DD68C;
+    --green-deep:#2BBE76;
+    --green-pale:rgba(61,214,140,0.16);
+    --red:#FF6B6B;
+    --red-pale:rgba(255,107,107,0.16);
+    --amber:#FFB454;
+    --amber-pale:rgba(255,180,84,0.16);
+    --card:rgba(255,255,255,0.07);
+    --card-border:rgba(255,255,255,0.14);
+    --glass-blur:blur(22px) saturate(160%);
+    --radius:18px;
+    --radius-sm:12px;
+    --mono: 'Roboto Mono', 'SF Mono', 'Consolas', monospace;
+    --sans: 'Inter', -apple-system, 'Segoe UI', Arial, sans-serif;
+    --serif: 'Source Serif Pro', Georgia, serif;
+    --ink-grad: linear-gradient(100deg, #FF7445 0%, #F8418A 38%, #D953D8 64%, #A37FF6 100%);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:#0B0B0F;
+    color:var(--ink);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background:
+      radial-gradient(ellipse 800px 600px at 12% -10%, rgba(248,65,138,0.20), transparent 60%),
+      radial-gradient(ellipse 700px 600px at 110% 10%, rgba(163,127,246,0.16), transparent 60%),
+      radial-gradient(ellipse 900px 700px at 50% 110%, rgba(255,116,69,0.10), transparent 60%);
+    pointer-events:none;
+    z-index:0;
+  }
+  .app{position:relative; z-index:1; max-width:920px; margin:0 auto; padding:0 16px 80px;}
+
+  /* HEADER */
+  header.top{
+    padding:28px 0 18px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    flex-wrap:wrap;
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand .mark{
+    width:30px; height:30px; border-radius:7px;
+    background:var(--ink-grad);
+    flex-shrink:0;
+    position:relative;
+    overflow:hidden;
+  }
+  .brand .mark::after{
+    content:"";
+    position:absolute; inset:0;
+    background:repeating-linear-gradient(90deg, rgba(17,17,17,0.55) 0 3px, transparent 3px 7px);
+  }
+  .brand h1{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:25px;
+    margin:0;
+    letter-spacing:-0.01em;
+    background:var(--ink-grad);
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+    color:transparent;
+  }
+  .brand .tagline{
+    font-family:var(--sans); font-size:11px; color:var(--ink-faint);
+    text-transform:uppercase; letter-spacing:0.08em; margin-top:1px;
+  }
+  .clock{font-family:var(--mono); font-size:13px; color:var(--ink-faint); text-align:right;}
+
+  /* POINT SWITCHER */
+  .points{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .point-btn{
+    background:var(--card);
+    backdrop-filter:var(--glass-blur);
+    -webkit-backdrop-filter:var(--glass-blur);
+    border:1px solid var(--card-border);
+    border-radius:var(--radius);
+    padding:14px 12px;
+    text-align:left;
+    cursor:pointer;
+    position:relative;
+    transition:border-color .15s, transform .1s;
+    font-family:var(--sans);
+  }
+  .point-btn:hover{border-color:var(--line-strong);}
+  .point-btn:active{transform:scale(0.99);}
+  .point-btn .dot{
+    width:8px; height:8px; border-radius:50%;
+    display:inline-block; margin-right:6px;
+  }
+  .point-btn.active{
+    border-color:var(--green-deep);
+    box-shadow:inset 0 0 0 1px var(--green-deep);
+    background:var(--green-pale);
+  }
+  .point-btn .pname{font-weight:600; font-size:14.5px; display:block; margin-bottom:2px;}
+  .point-btn .psub{font-size:11.5px; color:var(--ink-soft);}
+  .point-btn .pbalance{
+    font-family:var(--mono); font-size:15px; margin-top:8px; display:block;
+    font-weight:600;
+  }
+
+  /* TABS */
+  .tabs{
+    display:flex; gap:2px; margin-bottom:18px;
+    border-bottom:1px solid var(--line);
+    overflow-x:auto;
+  }
+  .tab{
+    font-family:var(--sans); font-size:13.5px; font-weight:500;
+    color:var(--ink-soft);
+    padding:10px 14px; border:none; background:none; cursor:pointer;
+    border-bottom:2px solid transparent;
+    white-space:nowrap;
+  }
+  .tab.active{color:var(--green-deep); border-bottom-color:var(--green-deep);}
+
+  /* CARD */
+  .card{
+    background:var(--card);
+    backdrop-filter:var(--glass-blur);
+    -webkit-backdrop-filter:var(--glass-blur);
+    border:1px solid var(--card-border);
+    border-radius:var(--radius);
+    padding:20px;
+    margin-bottom:16px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.28);
+  }
+  .card h2{
+    font-family:var(--serif); font-size:18px; font-weight:600; margin:0 0 4px;
+  }
+  .card .hint{font-size:12.5px; color:var(--ink-faint); margin:0 0 16px;}
+
+  /* FORM */
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block; font-size:12px; color:var(--ink-soft); margin-bottom:5px;
+    text-transform:uppercase; letter-spacing:0.04em; font-weight:500;
+  }
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;}
+  input[type=date], input[type=number], input[type=text], select{
+    width:100%;
+    font-family:var(--mono);
+    font-size:15px;
+    padding:9px 10px;
+    border:1px solid var(--line-strong);
+    border-radius:var(--radius-sm);
+    background:rgba(255,255,255,0.05);
+    color:var(--ink);
+  }
+  select{font-family:var(--sans);}
+  select option{background:#18181D; color:var(--ink);}
+  input:focus, select:focus{outline:2px solid var(--green); outline-offset:1px;}
+  .btn{
+    font-family:var(--sans); font-size:14px; font-weight:600;
+    padding:10px 18px; border-radius:var(--radius-sm);
+    border:1px solid var(--green-deep);
+    background:var(--green-deep); color:#06160E;
+    cursor:pointer;
+  }
+  .btn:hover{background:var(--green);}
+  .btn.secondary{
+    background:var(--card); backdrop-filter:var(--glass-blur); -webkit-backdrop-filter:var(--glass-blur);
+    color:var(--ink); border:1px solid var(--line-strong);
+  }
+  .btn.secondary:hover{border-color:var(--green-deep); color:var(--green-deep);}
+  .btn.danger{background:transparent; color:var(--red); border:1px solid var(--red);}
+  .btn.danger:hover{background:var(--red-pale);}
+  .btn:disabled{opacity:0.45; cursor:not-allowed;}
+  .btnrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;}
+
+  /* RECEIPT PREVIEW */
+  .receipt{
+    background:var(--paper-2);
+    border:1px dashed var(--line-strong);
+    border-radius:var(--radius-sm);
+    padding:14px 16px;
+    font-family:var(--mono); font-size:13.5px;
+    margin-bottom:14px;
+  }
+  .receipt .rline{display:flex; justify-content:space-between; padding:3px 0;}
+  .receipt .rline.total{border-top:1px dashed var(--line-strong); margin-top:6px; padding-top:8px; font-weight:600;}
+  .receipt .rline span:first-child{color:var(--ink-soft);}
+
+  /* METRIC GRID */
+  .metrics{display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-bottom:18px;}
+  .metric{
+    background:var(--card); backdrop-filter:var(--glass-blur); -webkit-backdrop-filter:var(--glass-blur);
+    border:1px solid var(--card-border); border-radius:var(--radius-sm);
+    padding:12px 14px;
+  }
+  .metric .mlabel{font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); margin-bottom:4px;}
+  .metric .mval{font-family:var(--mono); font-size:19px; font-weight:600;}
+  .metric .mval.green{color:var(--green-deep);}
+  .metric .mval.red{color:var(--red);}
+
+  /* TABLE */
+  table.ledger{width:100%; border-collapse:collapse; font-size:13px;}
+  table.ledger th{
+    text-align:right; font-size:11px; text-transform:uppercase; letter-spacing:.03em;
+    color:var(--ink-soft); font-weight:500; padding:6px 8px; border-bottom:1px solid var(--line-strong);
+    white-space:nowrap;
+  }
+  table.ledger th:first-child, table.ledger td:first-child{text-align:left;}
+  table.ledger td{
+    padding:7px 8px; border-bottom:1px solid var(--line); font-family:var(--mono);
+    text-align:right; white-space:nowrap;
+  }
+  table.ledger tbody tr:hover{background:var(--paper-2);}
+  table.ledger td.emp{font-family:var(--sans); text-align:left; color:var(--ink-soft); font-size:12.5px;}
+  .tablewrap{overflow-x:auto; margin:0 -4px;}
+  .rowdel{cursor:pointer; color:var(--ink-faint); font-size:13px;}
+  .rowdel:hover{color:var(--red);}
+  .zero{color:var(--ink-faint);}
+  .neg{color:var(--red);}
+
+  /* MONTH SWITCHER */
+  .month-switch{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;}
+  .month-chip{
+    font-family:var(--sans); font-size:13px; font-weight:500;
+    padding:8px 14px; border-radius:30px; border:1px solid var(--line-strong);
+    background:var(--card); backdrop-filter:var(--glass-blur); -webkit-backdrop-filter:var(--glass-blur);
+    color:var(--ink-soft); cursor:pointer;
+    text-transform:capitalize; white-space:nowrap;
+  }
+  .month-chip:hover{border-color:var(--green-deep); color:var(--ink);}
+  .month-chip.active{
+    background:var(--green-deep); border-color:var(--green-deep); color:#06160E;
+  }
+  .month-summary{
+    display:flex; gap:18px; flex-wrap:wrap;
+    background:var(--paper-2); backdrop-filter:var(--glass-blur); -webkit-backdrop-filter:var(--glass-blur);
+    border:1px solid var(--card-border); border-radius:var(--radius-sm);
+    padding:14px 16px; margin-bottom:16px;
+  }
+  .month-summary .ms-stat{text-align:left;}
+  .month-summary .ms-stat .mss-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-faint); margin-bottom:3px;}
+  .month-summary .ms-stat .mss-val{font-family:var(--mono); font-size:18px; font-weight:600;}
+
+  /* EMPLOYEES */
+  .emp-card{
+    border:1px solid var(--line); border-radius:var(--radius-sm);
+    padding:14px 16px; margin-bottom:10px;
+    display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+  }
+  .emp-card .ename{font-weight:600; font-size:14.5px;}
+  .emp-card .esub{font-size:12px; color:var(--ink-soft); margin-top:2px;}
+  .emp-debt{font-family:var(--mono); font-size:17px; font-weight:600;}
+  .emp-debt.owe{color:var(--red);}
+  .emp-debt.clear{color:var(--ink-faint);}
+
+  .empty-state{text-align:center; padding:40px 20px; color:var(--ink-faint);}
+  .empty-state i{font-size:28px; display:block; margin-bottom:10px;}
+
+  .footnote{font-size:11.5px; color:var(--ink-faint); margin-top:6px; line-height:1.5;}
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--green-deep); color:#06160E; padding:10px 20px; border-radius:30px;
+    font-size:13.5px; font-weight:500; opacity:0; transition:all .25s; pointer-events:none; z-index:50;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.55);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:flex; align-items:center; justify-content:center; z-index:60; padding:20px;
+  }
+  .modal{
+    background:var(--card); backdrop-filter:var(--glass-blur); -webkit-backdrop-filter:var(--glass-blur);
+    border:1px solid var(--card-border); border-radius:var(--radius); padding:22px; max-width:380px; width:100%;
+    box-shadow:0 16px 48px rgba(0,0,0,0.45);
+  }
+  .modal h3{font-family:var(--serif); font-size:17px; margin:0 0 10px;}
+  .modal p{font-size:13.5px; color:var(--ink-soft); line-height:1.5; margin:0 0 18px;}
+
+  /* PIN LOGIN */
+  .pin-dots{display:flex; justify-content:center; gap:22px; margin:10px 0 6px; cursor:text;}
+  .pin-dot{
+    width:22px; height:22px; border-radius:50%;
+    border:2px solid var(--line-strong); background:transparent;
+    transition:background .12s, border-color .12s, transform .12s;
+  }
+  .pin-dot.filled{background:var(--green-deep); border-color:var(--green-deep); transform:scale(1.1);}
+  .pin-dot.error{background:var(--red); border-color:var(--red);}
+  .pin-shake{animation:pin-shake-kf .35s;}
+  @keyframes pin-shake-kf{
+    0%,100%{transform:translateX(0);}
+    25%{transform:translateX(-8px);}
+    75%{transform:translateX(8px);}
+  }
+
+  @media (max-width:600px){
+    .points{grid-template-columns:1fr; }
+    .row3{grid-template-columns:1fr 1fr;}
+    header.top{flex-direction:column; align-items:flex-start;}
+    .brand h1{font-size:21px;}
+    .month-summary{gap:14px 22px;}
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const POINTS = {
+  yakovleva: {name:'Яковлева 46', sub:'онлайн касса', color:'#3DD68C', acquiring:true},
+  krasnodarskaya: {name:'Краснодарская 37', sub:'онлайн касса', color:'#FFB454', acquiring:true},
+  kalinina: {name:'Калинина 181', sub:'самозанятость', color:'#FF6B6B', acquiring:false},
+};
+
+const SUPABASE_URL = 'https://jkcvofnlqpyygpnwucck.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprY3ZvZm5scXB5eWdwbnd1Y2NrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NzQzMDEsImV4cCI6MjA5NzI1MDMwMX0.ZpaZRxOLciYfChPaQdIhUo42NuJ7yCjtJ78YIc0n48s';
+const APP_PASSWORD = '0260';
+const AUTH_KEY = 'dds-auth-ok';
+
+async function sb(path, options={}){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...options,
+    headers:{
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': options.prefer || 'return=representation',
+      ...(options.headers||{}),
+    }
+  });
+  if(!res.ok){
+    const text = await res.text().catch(()=> '');
+    throw new Error(`Supabase ${res.status}: ${text}`);
+  }
+  const ct = res.headers.get('content-type')||'';
+  if(ct.includes('application/json')) return res.json();
+  return null;
+}
+
+const PAID_MARK = 'ОПЛАЧЕНО';
+
+let DB = null;
+let state = { point:'yakovleva', tab:'entry', selectedMonth:null };
+
+function fmt(n){
+  n = Math.round((n||0)*100)/100;
+  if(Object.is(n,-0)) n = 0;
+  return n.toLocaleString('ru-RU', {minimumFractionDigits:0, maximumFractionDigits:2});
+}
+function fmtMoney(n){ return fmt(n) + ' ₽'; }
+function todayStr(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+function weekday(dateStr){
+  const days = ['вс','пн','вт','ср','чт','пт','сб'];
+  const d = new Date(dateStr+'T00:00:00');
+  return days[d.getDay()];
+}
+function fmtDate(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  return d.toLocaleDateString('ru-RU', {day:'2-digit', month:'2-digit', year:'numeric'});
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+async function loadDB(){
+  const [records, payouts, cost, employees] = await Promise.all([
+    sb('records?select=point,date,cash,cashless,deposit,withdrawal,employee,deduct_pct,staff_pct,z_report&order=date.asc'),
+    sb('payouts?select=point,employee,date,amount&order=date.asc'),
+    sb('cost_items?select=id,name,price,sheet_cost,ink_cost&order=id.asc'),
+    sb('employees?select=id,name,archived&order=name.asc'),
+  ]);
+
+  const byPoint = {yakovleva:[], krasnodarskaya:[], kalinina:[]};
+  records.forEach(r=>{
+    if(!byPoint[r.point]) byPoint[r.point] = [];
+    byPoint[r.point].push([
+      r.date, Number(r.cash), Number(r.cashless), Number(r.deposit), Number(r.withdrawal), r.employee||'',
+      r.deduct_pct!=null ? Number(r.deduct_pct) : 0,
+      r.staff_pct!=null ? Number(r.staff_pct) : 30,
+      r.z_report||'',
+    ]);
+  });
+
+  const payoutsByPoint = {yakovleva:[], krasnodarskaya:[], kalinina:[]};
+  payouts.forEach(p=>{
+    if(!payoutsByPoint[p.point]) payoutsByPoint[p.point] = [];
+    payoutsByPoint[p.point].push([p.employee, p.date, Number(p.amount)]);
+  });
+
+  DB = {
+    records: byPoint,
+    payouts: payoutsByPoint,
+    cost: cost.map(c=>[c.id, c.name, Number(c.price), Number(c.sheet_cost), Number(c.ink_cost)]),
+    employees: employees.map(e=>({id:e.id, name:e.name, archived:!!e.archived})),
+  };
+}
+
+function getRows(point){
+  return (DB.records[point] || []).slice().sort((a,b)=> a[0]<b[0]?-1:1);
+}
+function getPayouts(point){
+  return (DB.payouts[point] || []);
+}
+
+function calcBalances(point){
+  const rows = getRows(point);
+  let running = 0;
+  return rows.map(r=>{
+    const [date, cash, cashless, deposit, withdrawal, employee, deductPct, staffPct, zReport] = r;
+    running = running + (cash||0) + (deposit||0) - (withdrawal||0);
+    const total = (cash||0) + (cashless||0);
+    const dPct = deductPct!=null ? deductPct : 0;
+    const sPct = staffPct!=null ? staffPct : 30;
+    const salary = total * (1 - dPct/100) * (sPct/100);
+    return {date, cash:cash||0, cashless:cashless||0, deposit:deposit||0, withdrawal:withdrawal||0, employee:employee||'', total, balance:running, salary, deductPct:dPct, staffPct:sPct, zReport:zReport||''};
+  });
+}
+
+function currentBalance(point){
+  const rows = calcBalances(point);
+  if(rows.length===0) return 0;
+  return rows[rows.length-1].balance;
+}
+
+function employeeSummary(point){
+  const rows = calcBalances(point);
+  const payouts = getPayouts(point);
+  const archivedNames = new Set((DB.employees||[]).filter(e=>e.archived).map(e=>e.name));
+  const map = {};
+  rows.forEach(r=>{
+    const name = r.employee.trim();
+    if(!name || name===PAID_MARK || archivedNames.has(name)) return;
+    if(!map[name]) map[name] = {name, earned:0, shifts:0, lastDate:r.date};
+    map[name].earned += r.salary;
+    map[name].shifts += 1;
+    if(r.date > map[name].lastDate) map[name].lastDate = r.date;
+  });
+  payouts.forEach(p=>{
+    const [name, date, amount] = p;
+    if(archivedNames.has(name)) return;
+    if(!map[name]) map[name] = {name, earned:0, shifts:0, lastDate:date};
+    map[name].paid = (map[name].paid||0) + amount;
+  });
+  return Object.values(map).map(e=>{
+    e.paid = e.paid || 0;
+    e.balance = e.earned - e.paid;
+    e.avgPerShift = e.shifts ? e.earned/e.shifts : 0;
+    return e;
+  }).sort((a,b)=> b.balance - a.balance);
+}
+
+function render(){
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    ${renderHeader()}
+    ${renderPointSwitcher()}
+    ${renderTabs()}
+    <div id="tabContent">${renderTabContent()}</div>
+  `;
+  attachHandlers();
+}
+
+function renderHeader(){
+  const d = new Date();
+  return `
+  <header class="top">
+    <div class="brand">
+      <span class="mark"></span>
+      <div>
+        <h1>Пункт Печати</h1>
+        <div class="tagline">учёт касс</div>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <div class="clock">${d.toLocaleDateString('ru-RU',{weekday:'short', day:'2-digit', month:'long'})}</div>
+      <button class="btn secondary" id="logoutBtn" style="padding:6px 12px; font-size:12px;"><i class="ti ti-logout"></i></button>
+    </div>
+  </header>`;
+}
+
+function renderPointSwitcher(){
+  let html = '<div class="points">';
+  for(const key in POINTS){
+    const p = POINTS[key];
+    const bal = currentBalance(key);
+    const active = state.point===key ? 'active' : '';
+    html += `
+      <button class="point-btn ${active}" data-point="${key}">
+        <span class="pname"><span class="dot" style="background:${p.color}"></span>${p.name}</span>
+        <span class="psub">${p.sub}</span>
+        <span class="pbalance">${fmtMoney(bal)}</span>
+      </button>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderTabs(){
+  const tabs = [
+    {key:'entry', label:'Ввод дня', icon:'ti-pencil-plus'},
+    {key:'history', label:'История', icon:'ti-list'},
+    {key:'staff', label:'Сотрудники', icon:'ti-users'},
+    {key:'payroll', label:'Расчёт ЗП', icon:'ti-cash'},
+    {key:'cost', label:'Себестоимость', icon:'ti-printer'},
+  ];
+  let html = '<div class="tabs">';
+  tabs.forEach(t=>{
+    html += `<button class="tab ${state.tab===t.key?'active':''}" data-tab="${t.key}">${t.label}</button>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderTabContent(){
+  if(state.tab==='entry') return renderEntry();
+  if(state.tab==='history') return renderHistory();
+  if(state.tab==='staff') return renderStaff();
+  if(state.tab==='payroll') return renderPayroll();
+  if(state.tab==='cost') return renderCost();
+  return '';
+}
+
+function renderEntry(){
+  const point = state.point;
+  const rows = calcBalances(point);
+  const existingDates = new Set(rows.map(r=>r.date));
+  const today = todayStr();
+  const defaultDate = existingDates.has(today) ? '' : today;
+  const lastBalance = rows.length ? rows[rows.length-1].balance : 0;
+  const lastEmployee = rows.length ? rows[rows.length-1].employee : '';
+  const lastDeductPct = rows.length ? rows[rows.length-1].deductPct : (POINTS[point].acquiring ? 6 : 0);
+  const lastStaffPct = rows.length ? rows[rows.length-1].staffPct : 30;
+
+  const employees = (DB.employees||[]).filter(e=>!e.archived).map(e=>e.name);
+
+  return `
+  <div class="metrics">
+    <div class="metric">
+      <div class="mlabel">Остаток в кассе</div>
+      <div class="mval green">${fmtMoney(lastBalance)}</div>
+    </div>
+    <div class="metric">
+      <div class="mlabel">Записей внесено</div>
+      <div class="mval">${rows.length}</div>
+    </div>
+    <div class="metric">
+      <div class="mlabel">Последняя дата</div>
+      <div class="mval" style="font-size:15px">${rows.length ? fmtDate(rows[rows.length-1].date) : '—'}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Внести данные за день</h2>
+    <p class="hint">Точка: ${POINTS[point].name} (${POINTS[point].sub}). Если на эту дату уже есть запись — она будет перезаписана.</p>
+
+    <div class="field">
+      <label>Дата</label>
+      <input type="date" id="f-date" value="${defaultDate || today}" max="${today}">
+    </div>
+
+    <div class="field">
+      <label>Номер Z-отчёта</label>
+      <input type="text" id="f-zreport" inputmode="numeric" placeholder="например, 0042">
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label>Продажи нал, ₽</label>
+        <input type="number" id="f-cash" inputmode="decimal" placeholder="0" step="any">
+      </div>
+      <div class="field">
+        <label>Продажи безнал, ₽</label>
+        <input type="number" id="f-cashless" inputmode="decimal" placeholder="0" step="any">
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label>Внесение, ₽</label>
+        <input type="number" id="f-deposit" inputmode="decimal" placeholder="0" step="any">
+      </div>
+      <div class="field">
+        <label>Изъятие, ₽</label>
+        <input type="number" id="f-withdrawal" inputmode="decimal" placeholder="0" step="any">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Сотрудник</label>
+      <select id="f-employee">
+        <option value="">— выбрать —</option>
+        ${employees.map(e=>`<option value="${e}" ${e===lastEmployee?'selected':''}>${e}</option>`).join('')}
+        <option value="__new__">+ новый сотрудник</option>
+        <option value="${PAID_MARK}">${PAID_MARK} — подменный, доля выдана сразу</option>
+      </select>
+      <input type="text" id="f-employee-new" placeholder="Имя сотрудника" style="margin-top:8px; display:none;">
+    </div>
+
+    <div class="field" style="border-top:1px solid var(--line); padding-top:14px;">
+      <label>Формула ЗП за эту смену</label>
+      <div class="row2">
+        <div>
+          <label style="text-transform:none; font-size:11.5px;">Вычет из дохода, %</label>
+          <input type="number" id="f-deduct-pct" inputmode="decimal" step="any" value="${lastDeductPct}">
+        </div>
+        <div>
+          <label style="text-transform:none; font-size:11.5px;">Доля сотрудника, %</label>
+          <input type="number" id="f-staff-pct" inputmode="decimal" step="any" value="${lastStaffPct}">
+        </div>
+      </div>
+      <p class="footnote" style="margin-top:8px;">ЗП = (нал + безнал − вычет%) × доля сотрудника%. Поля заранее заполнены значениями, которые в последний раз использовались на этой точке — измените при необходимости, это повлияет только на текущую смену.</p>
+    </div>
+
+    <div class="receipt" id="livePreview"></div>
+
+    <div class="btnrow">
+      <button class="btn" id="saveDayBtn"><i class="ti ti-check"></i> Сохранить день</button>
+    </div>
+    <p class="footnote">Остаток в кассе = нал + внесение − изъятие + остаток предыдущего дня. Вариант «${PAID_MARK}» — для подменных сотрудников, которым доля выдана на месте: смена не попадает в долг по сотрудникам. Изменение формулы здесь не пересчитывает уже сохранённые прошлые дни.</p>
+  </div>
+  `;
+}
+
+function updateLivePreview(){
+  const cash = parseFloat(document.getElementById('f-cash').value) || 0;
+  const cashless = parseFloat(document.getElementById('f-cashless').value) || 0;
+  const deposit = parseFloat(document.getElementById('f-deposit').value) || 0;
+  const withdrawal = parseFloat(document.getElementById('f-withdrawal').value) || 0;
+  const total = cash + cashless;
+  const point = state.point;
+  const deductPct = parseFloat(document.getElementById('f-deduct-pct').value) || 0;
+  const staffPct = parseFloat(document.getElementById('f-staff-pct').value) || 0;
+  const salary = total * (1 - deductPct/100) * (staffPct/100);
+  const empSelected = document.getElementById('f-employee').value;
+  const isPaid = empSelected === PAID_MARK;
+
+  const dateVal = document.getElementById('f-date').value;
+  const rows = calcBalances(point).filter(r=>r.date < dateVal);
+  const prevBalance = rows.length ? rows[rows.length-1].balance : 0;
+  const newBalance = cash + deposit - withdrawal + prevBalance;
+
+  const salaryLine = isPaid
+    ? `<div class="rline"><span>Доля сотрудника</span><span>${fmtMoney(salary)} — выдана сразу, в долг не идёт</span></div>`
+    : `<div class="rline"><span>ЗП сотрудника</span><span>${fmtMoney(salary)}</span></div>`;
+
+  const base = total * (1 - deductPct/100);
+  const formulaLine = `<div class="rline"><span>База после вычета ${fmt(deductPct)}%</span><span>${fmtMoney(base)}</span></div>`;
+
+  document.getElementById('livePreview').innerHTML = `
+    <div class="rline"><span>Продажи общая</span><span>${fmtMoney(total)}</span></div>
+    ${formulaLine}
+    ${salaryLine}
+    <div class="rline total"><span>Остаток в кассе после</span><span>${fmtMoney(newBalance)}</span></div>
+  `;
+}
+
+const MONTH_NAMES = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+
+function renderHistory(){
+  const point = state.point;
+  const rows = calcBalances(point);
+  if(rows.length===0){
+    return `<div class="card"><div class="empty-state"><i class="ti ti-database-off"></i>Пока нет записей для этой точки</div></div>`;
+  }
+
+  const groups = {};
+  rows.forEach(r=>{
+    const key = r.date.slice(0,7);
+    if(!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  });
+  const monthKeys = Object.keys(groups).sort().reverse();
+
+  if(!state.selectedMonth || !groups[state.selectedMonth]){
+    state.selectedMonth = monthKeys[0];
+  }
+  const activeKey = state.selectedMonth;
+  const monthRows = groups[activeKey].slice().reverse();
+  const [y, m] = activeKey.split('-').map(Number);
+  const monthLabel = `${MONTH_NAMES[m-1]} ${y}`;
+  const sumCash = monthRows.reduce((s,r)=>s+r.cash,0);
+  const sumCashless = monthRows.reduce((s,r)=>s+r.cashless,0);
+  const sumTotal = sumCash + sumCashless;
+
+  let html = `<div class="card" style="margin-bottom:14px;">
+    <h2>История по дням</h2>
+    <p class="hint">${POINTS[point].name} — всего ${rows.length} записей за ${monthKeys.length} ${monthKeys.length===1?'месяц':'месяцев'}</p>
+  </div>`;
+
+  html += `<div class="month-switch">`;
+  monthKeys.forEach(key=>{
+    const [yy, mm] = key.split('-').map(Number);
+    const label = `${MONTH_NAMES[mm-1].slice(0,3)} ${yy}`;
+    html += `<button class="month-chip ${key===activeKey?'active':''}" data-month-select="${key}">${label}</button>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="month-summary">
+    <div class="ms-stat"><div class="mss-label">Нал за ${monthLabel}</div><div class="mss-val">${fmtMoney(sumCash)}</div></div>
+    <div class="ms-stat"><div class="mss-label">Безнал за ${monthLabel}</div><div class="mss-val">${fmtMoney(sumCashless)}</div></div>
+    <div class="ms-stat"><div class="mss-label">Итого</div><div class="mss-val" style="color:var(--green-deep)">${fmtMoney(sumTotal)}</div></div>
+    <div class="ms-stat"><div class="mss-label">Дней с продажами</div><div class="mss-val">${monthRows.length}</div></div>
+  </div>`;
+
+  html += `<div class="card"><div class="tablewrap">
+    <table class="ledger">
+      <thead><tr>
+        <th>Дата</th><th>Z-отчёт</th><th>Нал</th><th>Безнал</th><th>Итого</th><th>Внес.</th><th>Изъят.</th><th>Остаток</th><th>ЗП</th><th>Сотрудник</th><th></th>
+      </tr></thead>
+      <tbody>`;
+  monthRows.forEach(r=>{
+    html += `<tr data-date="${r.date}">
+      <td>${weekday(r.date)} ${fmtDate(r.date)}</td>
+      <td class="${r.zReport?'':'zero'}">${r.zReport||'—'}</td>
+      <td class="${r.cash?'':'zero'}">${fmt(r.cash)}</td>
+      <td class="${r.cashless?'':'zero'}">${fmt(r.cashless)}</td>
+      <td>${fmt(r.total)}</td>
+      <td class="${r.deposit?'':'zero'}">${r.deposit?fmt(r.deposit):'—'}</td>
+      <td class="${r.withdrawal?'':'zero'}">${r.withdrawal?fmt(r.withdrawal):'—'}</td>
+      <td>${fmt(r.balance)}</td>
+      <td title="вычет ${fmt(r.deductPct)}% · доля ${fmt(r.staffPct)}%">${fmt(r.salary)}</td>
+      <td class="emp">${r.employee===PAID_MARK ? `<span style="color:var(--green-deep); font-weight:500;">${PAID_MARK}</span>` : (r.employee||'—')}</td>
+      <td><span class="rowdel" data-del="${r.date}" title="Удалить запись"><i class="ti ti-trash"></i></span></td>
+    </tr>`;
+  });
+  html += `</tbody></table></div></div>`;
+
+  return html;
+}
+
+function renderStaff(){
+  const employees = DB.employees || [];
+  const active = employees.filter(e=>!e.archived);
+  const archived = employees.filter(e=>e.archived);
+
+  let html = `<div class="card">
+    <h2>Список сотрудников</h2>
+    <p class="hint">Общий справочник для всех точек. Архивные не предлагаются при выборе сотрудника на вкладке «Ввод дня», но остаются в истории и расчётах.</p>
+    <div class="btnrow" style="margin-bottom:14px;">
+      <input type="text" id="newEmpName" placeholder="Имя нового сотрудника" style="flex:1; min-width:160px;">
+      <button class="btn" id="addEmpBtn"><i class="ti ti-plus"></i> Добавить</button>
+    </div>`;
+
+  if(active.length===0){
+    html += `<p class="hint">Активных сотрудников нет.</p>`;
+  }else{
+    active.forEach(e=>{
+      html += `<div class="emp-card">
+        <div class="ename">${e.name}</div>
+        <button class="btn secondary" style="font-size:12.5px; padding:6px 12px;" data-archive-emp="${e.id}">В архив</button>
+      </div>`;
+    });
+  }
+
+  if(archived.length){
+    html += `<p class="hint" style="margin-top:14px;">В архиве</p>`;
+    archived.forEach(e=>{
+      html += `<div class="emp-card" style="opacity:0.65;">
+        <div class="ename">${e.name}</div>
+        <button class="btn secondary" style="font-size:12.5px; padding:6px 12px;" data-unarchive-emp="${e.id}">Вернуть</button>
+      </div>`;
+    });
+  }
+  html += `</div>`;
+  return html;
+}
+
+function renderPayroll(){
+  const point = state.point;
+  const summary = employeeSummary(point);
+
+  let html = `<div class="card">
+    <h2>Расчёт ЗП — ${POINTS[point].name}</h2>
+    <p class="hint">Начислено по сменам минус выплаченное. Положительный остаток — долг к выплате.</p>`;
+  if(summary.length===0){
+    html += `<div class="empty-state"><i class="ti ti-user-off"></i>Нет данных по сотрудникам</div>`;
+  }else{
+    summary.forEach(e=>{
+      const cls = Math.abs(e.balance) < 0.01 ? 'clear' : (e.balance>0?'owe':'clear');
+      html += `<div class="emp-card">
+        <div>
+          <div class="ename">${e.name}</div>
+          <div class="esub">${e.shifts} смен · в среднем ${fmtMoney(e.avgPerShift)}/смену · последняя смена ${fmtDate(e.lastDate)}</div>
+          <div class="esub">Начислено ${fmtMoney(e.earned)} · выплачено ${fmtMoney(e.paid)}</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="emp-debt ${cls}">${e.balance>0?'+':''}${fmtMoney(e.balance)}</div>
+          ${e.balance>0.01 ? `<button class="btn secondary" style="margin-top:6px; font-size:12.5px; padding:6px 12px;" data-payout-open="${e.name}" data-amount="${e.balance}">Внести выплату</button>` : ''}
+        </div>
+      </div>`;
+    });
+  }
+  html += `</div>`;
+
+  const payouts = getPayouts(point).slice().sort((a,b)=> a[1]<b[1]?1:-1);
+  if(payouts.length){
+    html += `<div class="card">
+      <h2>Журнал выплат</h2>
+      <div class="tablewrap"><table class="ledger">
+        <thead><tr><th style="text-align:left">Сотрудник</th><th>Дата</th><th>Сумма</th></tr></thead>
+        <tbody>`;
+    payouts.forEach(p=>{
+      html += `<tr><td class="emp" style="text-align:left">${p[0]}</td><td>${fmtDate(p[1])}</td><td>${fmtMoney(p[2])}</td></tr>`;
+    });
+    html += `</tbody></table></div></div>`;
+  }
+  return html;
+}
+
+function renderCost(){
+  const cost = DB.cost;
+  let html = `<div class="card">
+    <h2>Себестоимость печати</h2>
+    <p class="hint">Маржа после налога считается по ставке 7% (УСН доходы 6% + допущение). Можно менять цену продажи.</p>
+    <div class="tablewrap"><table class="ledger">
+      <thead><tr><th style="text-align:left">Услуга</th><th>Цена</th><th>Лист</th><th>Краска</th><th>ЗП (30%)</th><th>Расходы</th><th>Маржа до нал.</th><th>Прибыль</th></tr></thead>
+      <tbody>`;
+  cost.forEach(c=>{
+    const [id, name, price, sheet, ink] = c;
+    const salary = price*0.30;
+    const expenses = sheet+ink+salary;
+    const marginBefore = (price-expenses)/price;
+    const profit = price*0.93-expenses;
+    html += `<tr>
+      <td class="emp" style="text-align:left">${name}</td>
+      <td><input type="number" data-cost-price="${id}" value="${price}" style="width:64px; text-align:right; padding:4px 6px; font-size:13px;"></td>
+      <td>${fmt(sheet)}</td>
+      <td>${fmt(ink)}</td>
+      <td>${fmt(salary)}</td>
+      <td>${fmt(expenses)}</td>
+      <td>${(marginBefore*100).toFixed(1)}%</td>
+      <td>${fmtMoney(profit)}</td>
+    </tr>`;
+  });
+  html += `</tbody></table></div>
+    <p class="footnote">Расходы = стоимость листа + краска + ЗП сотрудника (30% от цены). Прибыль = цена × 93% − расходы.</p>
+  </div>`;
+  return html;
+}
+
+function attachHandlers(){
+  const logoutBtn = document.getElementById('logoutBtn');
+  if(logoutBtn){
+    logoutBtn.addEventListener('click', ()=>{
+      sessionStorage.removeItem(AUTH_KEY);
+      renderLogin();
+    });
+  }
+  document.querySelectorAll('[data-point]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.point = btn.dataset.point;
+      state.selectedMonth = null;
+      render();
+    });
+  });
+  document.querySelectorAll('[data-tab]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.tab = btn.dataset.tab;
+      render();
+    });
+  });
+
+  if(state.tab==='entry'){
+    const empSelect = document.getElementById('f-employee');
+    const empNew = document.getElementById('f-employee-new');
+    empSelect.addEventListener('change', ()=>{
+      empNew.style.display = empSelect.value==='__new__' ? 'block' : 'none';
+      updateLivePreview();
+    });
+    ['f-cash','f-cashless','f-deposit','f-withdrawal','f-date','f-deduct-pct','f-staff-pct'].forEach(id=>{
+      document.getElementById(id).addEventListener('input', updateLivePreview);
+    });
+    updateLivePreview();
+    document.getElementById('saveDayBtn').addEventListener('click', saveDay);
+  }
+
+  if(state.tab==='history'){
+    document.querySelectorAll('[data-month-select]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        state.selectedMonth = el.dataset.monthSelect;
+        render();
+      });
+    });
+    document.querySelectorAll('[data-del]').forEach(el=>{
+      el.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        confirmDelete(el.dataset.del);
+      });
+    });
+  }
+
+  if(state.tab==='staff'){
+    const addBtn = document.getElementById('addEmpBtn');
+    const addInput = document.getElementById('newEmpName');
+    if(addBtn){
+      addBtn.addEventListener('click', ()=> addEmployee(addInput.value));
+      addInput.addEventListener('keydown', e=>{ if(e.key==='Enter') addEmployee(addInput.value); });
+    }
+    document.querySelectorAll('[data-archive-emp]').forEach(btn=>{
+      btn.addEventListener('click', ()=> setEmployeeArchived(btn.dataset.archiveEmp, true));
+    });
+    document.querySelectorAll('[data-unarchive-emp]').forEach(btn=>{
+      btn.addEventListener('click', ()=> setEmployeeArchived(btn.dataset.unarchiveEmp, false));
+    });
+  }
+
+  if(state.tab==='payroll'){
+    document.querySelectorAll('[data-payout-open]').forEach(btn=>{
+      btn.addEventListener('click', ()=> openPayoutModal(btn.dataset.payoutOpen, parseFloat(btn.dataset.amount)));
+    });
+  }
+
+  if(state.tab==='cost'){
+    document.querySelectorAll('[data-cost-price]').forEach(inp=>{
+      inp.addEventListener('change', async ()=>{
+        const id = inp.dataset.costPrice;
+        const newPrice = parseFloat(inp.value)||0;
+        try{
+          await sb(`cost_items?id=eq.${id}`, {method:'PATCH', body:JSON.stringify({price:newPrice}), prefer:'return=minimal'});
+          await loadDB();
+          showToast('Цена обновлена');
+          render();
+        }catch(e){
+          console.error(e);
+          showToast('Не удалось сохранить цену');
+        }
+      });
+    });
+  }
+}
+
+async function saveDay(){
+  const point = state.point;
+  const date = document.getElementById('f-date').value;
+  if(!date){ showToast('Укажите дату'); return; }
+  const cash = parseFloat(document.getElementById('f-cash').value) || 0;
+  const cashless = parseFloat(document.getElementById('f-cashless').value) || 0;
+  const deposit = parseFloat(document.getElementById('f-deposit').value) || 0;
+  const withdrawal = parseFloat(document.getElementById('f-withdrawal').value) || 0;
+  const deductPct = parseFloat(document.getElementById('f-deduct-pct').value) || 0;
+  const staffPct = parseFloat(document.getElementById('f-staff-pct').value) || 0;
+  const zReport = document.getElementById('f-zreport').value.trim();
+  let employee = document.getElementById('f-employee').value;
+  let isNewEmployee = false;
+  if(employee==='__new__'){
+    employee = document.getElementById('f-employee-new').value.trim();
+    isNewEmployee = true;
+  }
+  if(!employee){ showToast('Выберите сотрудника'); return; }
+
+  const btn = document.getElementById('saveDayBtn');
+  btn.disabled = true;
+  try{
+    if(isNewEmployee){
+      await sb('employees?on_conflict=name', {
+        method:'POST',
+        body: JSON.stringify({name:employee, archived:false}),
+        prefer: 'resolution=merge-duplicates,return=minimal',
+      });
+    }
+    await sb('records?on_conflict=point,date', {
+      method:'POST',
+      body: JSON.stringify({point, date, cash, cashless, deposit, withdrawal, employee, deduct_pct:deductPct, staff_pct:staffPct, z_report:zReport}),
+      prefer: 'resolution=merge-duplicates,return=minimal',
+    });
+    await loadDB();
+    showToast('День сохранён');
+    render();
+  }catch(e){
+    console.error(e);
+    showToast('Не удалось сохранить — проверьте связь');
+    btn.disabled = false;
+  }
+}
+
+function confirmDelete(date){
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <h3>Удалить запись?</h3>
+      <p>Запись за ${fmtDate(date)} будет удалена без возможности восстановления.</p>
+      <div class="btnrow">
+        <button class="btn danger" id="confirmDelBtn">Удалить</button>
+        <button class="btn secondary" id="cancelDelBtn">Отмена</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById('confirmDelBtn').addEventListener('click', async ()=>{
+    const point = state.point;
+    try{
+      await sb(`records?point=eq.${point}&date=eq.${date}`, {method:'DELETE', prefer:'return=minimal'});
+      await loadDB();
+      showToast('Запись удалена');
+    }catch(e){
+      console.error(e);
+      showToast('Не удалось удалить запись');
+    }
+    document.body.removeChild(overlay);
+    render();
+  });
+  document.getElementById('cancelDelBtn').addEventListener('click', ()=>{
+    document.body.removeChild(overlay);
+  });
+}
+
+function openPayoutModal(name, debt){
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <h3>Выплата — ${name}</h3>
+      <p>Текущий долг: ${fmtMoney(debt)}. Можно внести любую сумму — остаток долга пересчитается автоматически.</p>
+      <div class="field">
+        <label>Сумма выплаты, ₽</label>
+        <input type="number" id="payoutAmount" inputmode="decimal" step="any" value="${debt}">
+      </div>
+      <div class="btnrow">
+        <button class="btn" id="confirmPayoutBtn">Сохранить выплату</button>
+        <button class="btn secondary" id="cancelPayoutBtn">Отмена</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const input = document.getElementById('payoutAmount');
+  input.focus();
+  input.select();
+  const close = ()=> document.body.removeChild(overlay);
+  document.getElementById('confirmPayoutBtn').addEventListener('click', async ()=>{
+    const amount = parseFloat(input.value);
+    if(!amount || amount<=0){ showToast('Укажите сумму больше нуля'); return; }
+    close();
+    await markPayout(name, amount);
+  });
+  document.getElementById('cancelPayoutBtn').addEventListener('click', close);
+  input.addEventListener('keydown', e=>{
+    if(e.key==='Enter') document.getElementById('confirmPayoutBtn').click();
+  });
+}
+
+async function markPayout(name, amount){
+  const point = state.point;
+  const date = todayStr();
+  try{
+    await sb('payouts', {
+      method:'POST',
+      body: JSON.stringify({point, employee:name, date, amount: Math.round(amount*100)/100}),
+      prefer: 'return=minimal',
+    });
+    await loadDB();
+    showToast(`Выплата ${fmtMoney(amount)} сотруднику ${name} сохранена`);
+    render();
+  }catch(e){
+    console.error(e);
+    showToast('Не удалось сохранить выплату');
+  }
+}
+
+async function addEmployee(name){
+  name = (name||'').trim();
+  if(!name){ showToast('Введите имя сотрудника'); return; }
+  try{
+    await sb('employees?on_conflict=name', {
+      method:'POST',
+      body: JSON.stringify({name, archived:false}),
+      prefer: 'resolution=merge-duplicates,return=minimal',
+    });
+    await loadDB();
+    showToast(`Сотрудник «${name}» добавлен`);
+    render();
+  }catch(e){
+    console.error(e);
+    showToast('Не удалось добавить сотрудника');
+  }
+}
+
+async function setEmployeeArchived(id, archived){
+  try{
+    await sb(`employees?id=eq.${id}`, {method:'PATCH', body:JSON.stringify({archived}), prefer:'return=minimal'});
+    await loadDB();
+    showToast(archived ? 'Сотрудник перенесён в архив' : 'Сотрудник возвращён из архива');
+    render();
+  }catch(e){
+    console.error(e);
+    showToast('Не удалось изменить статус сотрудника');
+  }
+}
+
+let pinValue = '';
+
+function renderLogin(){
+  const pinLength = APP_PASSWORD.length;
+  pinValue = '';
+  document.getElementById('app').innerHTML = `
+    <div style="display:flex; align-items:center; justify-content:center; min-height:80vh;">
+      <div class="card" style="max-width:340px; width:100%; text-align:center;">
+        <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:22px;">
+          <span class="mark"></span>
+          <div style="text-align:left;">
+            <h1 style="font-size:20px;">Пункт Печати</h1>
+            <div class="tagline">учёт касс</div>
+          </div>
+        </div>
+        <p class="hint" style="margin-bottom:0;">Введите пин-код для входа</p>
+        <div class="pin-dots" id="pinDots"></div>
+        <input type="tel" inputmode="numeric" autocomplete="off" id="pinInput" maxlength="${pinLength}"
+          style="position:absolute; opacity:0; width:1px; height:1px; pointer-events:none;">
+      </div>
+    </div>
+  `;
+
+  const dotsEl = document.getElementById('pinDots');
+  const hiddenInput = document.getElementById('pinInput');
+  const renderDots = (errorState)=>{
+    let html = '';
+    for(let i=0;i<pinLength;i++){
+      const filled = i < pinValue.length;
+      html += `<span class="pin-dot ${filled?'filled':''} ${errorState?'error':''}"></span>`;
+    }
+    dotsEl.innerHTML = html;
+  };
+  renderDots(false);
+
+  const tryLogin = ()=>{
+    if(pinValue === APP_PASSWORD){
+      sessionStorage.setItem(AUTH_KEY, '1');
+      boot();
+    }else{
+      renderDots(true);
+      document.querySelector('.card').classList.add('pin-shake');
+      setTimeout(()=>{
+        pinValue = '';
+        hiddenInput.value = '';
+        renderDots(false);
+        document.querySelector('.card')?.classList.remove('pin-shake');
+      }, 380);
+    }
+  };
+
+  hiddenInput.addEventListener('input', ()=>{
+    pinValue = hiddenInput.value.replace(/\D/g,'').slice(0, pinLength);
+    hiddenInput.value = pinValue;
+    renderDots(false);
+    if(pinValue.length === pinLength) setTimeout(tryLogin, 120);
+  });
+
+  document.querySelector('.card').addEventListener('click', ()=> hiddenInput.focus());
+  hiddenInput.focus();
+}
+
+function renderLoadError(message){
+  document.getElementById('app').innerHTML = `
+    <div style="display:flex; align-items:center; justify-content:center; min-height:80vh;">
+      <div class="card" style="max-width:380px; width:100%; text-align:center;">
+        <i class="ti ti-database-off" style="font-size:28px; color:var(--ink-faint); display:block; margin-bottom:10px;"></i>
+        <h2>Не удалось загрузить данные</h2>
+        <p class="hint">${message}</p>
+        <div class="btnrow" style="justify-content:center;">
+          <button class="btn secondary" id="retryBtn">Повторить</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('retryBtn').addEventListener('click', boot);
+}
+
+async function boot(){
+  document.getElementById('app').innerHTML = `<div style="padding:60px 0; text-align:center; color:var(--ink-faint);">Загрузка…</div>`;
+  try{
+    await loadDB();
+    render();
+  }catch(e){
+    console.error(e);
+    renderLoadError('Проверьте подключение к интернету и повторите попытку.');
+  }
+}
+
+(function init(){
+  if(sessionStorage.getItem(AUTH_KEY) === '1'){
+    boot();
+  }else{
+    renderLogin();
+  }
+})();
+</script>
+</body>
+</html>
