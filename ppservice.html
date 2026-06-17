@@ -593,12 +593,16 @@ function employeeSummary(point){
   const rows = calcBalances(point);
   const payouts = getPayouts(point);
   const archivedNames = new Set((DB.employees||[]).filter(e=>e.archived).map(e=>e.name));
+  const isSelfEmployed = POINTS[point].mode === 'selfEmployed';
   const map = {};
   rows.forEach(r=>{
     const name = r.employee.trim();
     if(!name || name===PAID_MARK || archivedNames.has(name)) return;
     if(!map[name]) map[name] = {name, earned:0, shifts:0, lastDate:r.date};
-    map[name].earned += r.salary;
+    // На онлайн-кассе вся выручка у нас, и мы должны сотруднику его долю (r.salary).
+    // На самозанятости вся выручка уже у сотрудника на руках, и он должен вернуть
+    // нам нашу часть — то, что остаётся после вычета его доли (total - r.salary).
+    map[name].earned += isSelfEmployed ? (r.total - r.salary) : r.salary;
     map[name].shifts += 1;
     if(r.date > map[name].lastDate) map[name].lastDate = r.date;
   });
@@ -1088,7 +1092,7 @@ function renderPayroll(){
   if(payouts.length){
     html += `<div class="card"><h2>${isSelfEmployed ? 'Журнал возвратов' : 'Журнал выплат'}</h2>
       <div class="tablewrap"><table class="ledger">
-        <thead><tr><th style="text-align:left">Сотрудник</th><th>Дата</th><th>Сумма</th><th style="text-align:left">Комментарий</th></tr></thead>
+        <thead><tr><th style="text-align:left">Сотрудник</th><th>Дата</th><th>Сумма</th><th style="text-align:left">Комментарий</th><th></th></tr></thead>
         <tbody>`;
     payouts.forEach(p=>{
       const amountColor = p.amount<0 ? 'var(--red)' : (p.isAdjustment ? 'var(--amber)' : 'inherit');
@@ -1097,6 +1101,7 @@ function renderPayroll(){
         <td>${fmtDate(p.date)}</td>
         <td style="color:${amountColor};">${p.amount<0?'−':''}${fmtMoney(Math.abs(p.amount))}</td>
         <td style="text-align:left; color:var(--ink-soft); font-family:var(--sans); font-size:12.5px;">${p.comment||'—'}</td>
+        <td><span class="rowdel" data-del-payout="${p.id}" title="Удалить запись"><i class="ti ti-trash"></i></span></td>
       </tr>`;
     });
     html += `</tbody></table></div>`;
@@ -1107,6 +1112,7 @@ function renderPayroll(){
       html += `<div class="day-card">
         <div class="dc-top">
           <div class="dc-date">${p.employee}${p.isAdjustment ? ' <span style="color:var(--amber); font-size:11px;">(корр.)</span>' : ''}</div>
+          <span class="rowdel" data-del-payout="${p.id}" title="Удалить запись"><i class="ti ti-trash"></i></span>
         </div>
         <div class="dc-grid">
           <div class="dc-item"><div class="dc-label">Дата</div><div class="dc-val">${fmtDate(p.date)}</div></div>
@@ -1268,6 +1274,12 @@ function attachHandlers(){
     document.querySelectorAll('[data-adjust-open]').forEach(btn=>{
       btn.addEventListener('click', ()=> openAdjustmentModal(btn.dataset.adjustOpen, parseFloat(btn.dataset.balance)));
     });
+    document.querySelectorAll('[data-del-payout]').forEach(el=>{
+      el.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        confirmDeletePayout(el.dataset.delPayout);
+      });
+    });
   }
 
   if(state.tab==='cost'){
@@ -1388,6 +1400,36 @@ function confirmDeleteMovement(id){
   });
 }
 
+function confirmDeletePayout(id){
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <h3>Удалить запись?</h3>
+      <p>Запись из журнала выплат/корректировок будет удалена без возможности восстановления. Баланс сотрудника пересчитается автоматически.</p>
+      <div class="btnrow">
+        <button class="btn danger" id="confirmDelPayoutBtn">Удалить</button>
+        <button class="btn secondary" id="cancelDelPayoutBtn">Отмена</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById('confirmDelPayoutBtn').addEventListener('click', async ()=>{
+    try{
+      await sb(`payouts?id=eq.${id}`, {method:'DELETE', prefer:'return=minimal'});
+      await loadDB();
+      showToast('Запись удалена');
+    }catch(e){
+      console.error(e);
+      showToast('Не удалось удалить запись');
+    }
+    document.body.removeChild(overlay);
+    render();
+  });
+  document.getElementById('cancelDelPayoutBtn').addEventListener('click', ()=>{
+    document.body.removeChild(overlay);
+  });
+}
+
 function confirmDelete(date){
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
@@ -1478,6 +1520,7 @@ function openAdjustmentModal(name, balance){
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   const suggestion = Math.round(balance*100)/100;
+  const today = todayStr();
   overlay.innerHTML = `
     <div class="modal">
       <h3>Корректировка — ${name}</h3>
@@ -1485,6 +1528,10 @@ function openAdjustmentModal(name, balance){
       <div class="field">
         <label>Сумма корректировки, ₽ (можно со знаком минус)</label>
         <input type="number" id="adjustAmount" inputmode="decimal" step="any" value="${suggestion}">
+      </div>
+      <div class="field">
+        <label>Дата корректировки</label>
+        <input type="date" id="adjustDate" value="${today}" max="${today}">
       </div>
       <div class="field">
         <label>Комментарий — причина корректировки</label>
@@ -1503,10 +1550,12 @@ function openAdjustmentModal(name, balance){
   document.getElementById('confirmAdjustBtn').addEventListener('click', async ()=>{
     const amount = parseFloat(input.value);
     if(!amount){ showToast('Укажите сумму, отличную от нуля'); return; }
+    const date = document.getElementById('adjustDate').value;
+    if(!date){ showToast('Укажите дату корректировки'); return; }
     const comment = document.getElementById('adjustComment').value.trim();
     if(!comment){ showToast('Укажите причину корректировки'); return; }
     close();
-    await saveAdjustment(name, amount, comment);
+    await saveAdjustment(name, amount, comment, date);
   });
   document.getElementById('cancelAdjustBtn').addEventListener('click', close);
   input.addEventListener('keydown', e=>{
@@ -1514,9 +1563,9 @@ function openAdjustmentModal(name, balance){
   });
 }
 
-async function saveAdjustment(name, amount, comment){
+async function saveAdjustment(name, amount, comment, date){
   const point = state.point;
-  const date = todayStr();
+  date = date || todayStr();
   try{
     await sb('payouts', {
       method:'POST',
