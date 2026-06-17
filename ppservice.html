@@ -390,9 +390,9 @@
 
 <script>
 const POINTS = {
-  yakovleva: {name:'Яковлева 46', sub:'онлайн касса', color:'#3DD68C', acquiring:true},
-  krasnodarskaya: {name:'Краснодарская 37', sub:'онлайн касса', color:'#FFB454', acquiring:true},
-  kalinina: {name:'Калинина 181', sub:'самозанятость', color:'#FF6B6B', acquiring:false},
+  yakovleva: {name:'Яковлева 46', sub:'онлайн касса', color:'#3DD68C', acquiring:true, mode:'cashier'},
+  krasnodarskaya: {name:'Краснодарская 37', sub:'онлайн касса', color:'#FFB454', acquiring:true, mode:'cashier'},
+  kalinina: {name:'Калинина 181', sub:'самозанятость', color:'#FF6B6B', acquiring:false, mode:'selfEmployed'},
 };
 
 const SUPABASE_URL = 'https://jkcvofnlqpyygpnwucck.supabase.co';
@@ -580,15 +580,13 @@ function currentBalance(point){
   return buildBalanceTimeline(point).lastBalance;
 }
 
-function avgRevenue(point, days){
+function avgRevenue(point, count){
   const rows = calcBalances(point);
   if(rows.length===0) return 0;
-  const today = todayStr();
-  const fromDate = addDaysStr(today, -(days-1));
-  const sum = rows
-    .filter(r=> r.date >= fromDate && r.date <= today)
-    .reduce((s,r)=> s + r.total, 0);
-  return sum / days;
+  // rows отсортированы по дате по возрастанию (см. getRows) — берём последние `count` штук
+  const lastN = rows.slice(-count);
+  const sum = lastN.reduce((s,r)=> s + r.total, 0);
+  return sum / lastN.length;
 }
 
 function employeeSummary(point){
@@ -1051,10 +1049,18 @@ function renderStaff(){
 function renderPayroll(){
   const point = state.point;
   const summary = employeeSummary(point);
+  const isSelfEmployed = POINTS[point].mode === 'selfEmployed';
+
+  const earnedLabel = isSelfEmployed ? 'Должен вернуть' : 'Начислено';
+  const paidLabel = isSelfEmployed ? 'возвращено' : 'выплачено';
+  const debtHint = isSelfEmployed
+    ? 'На самозанятости вся выручка остаётся у сотрудника на руках. Расчёт показывает, сколько он должен вернуть нам (наша доля), за вычетом уже возвращённого. Положительный остаток — долг сотрудника перед нами.'
+    : 'Начислено по сменам минус выплаченное. Положительный остаток — наш долг к выплате сотруднику.';
+  const payoutBtnLabel = isSelfEmployed ? 'Принять возврат' : 'Внести выплату';
 
   let html = `<div class="card">
     <h2>Расчёт ЗП — ${POINTS[point].name}</h2>
-    <p class="hint">Начислено по сменам минус выплаченное. Положительный остаток — долг к выплате.</p>`;
+    <p class="hint">${debtHint}</p>`;
   if(summary.length===0){
     html += `<div class="empty-state"><i class="ti ti-user-off"></i>Нет данных по сотрудникам</div>`;
   }else{
@@ -1064,12 +1070,12 @@ function renderPayroll(){
         <div>
           <div class="ename">${e.name}</div>
           <div class="esub">${e.shifts} смен · в среднем ${fmtMoney(e.avgPerShift)}/смену · последняя смена ${fmtDate(e.lastDate)}</div>
-          <div class="esub">Начислено ${fmtMoney(e.earned)} · выплачено ${fmtMoney(e.paid)}</div>
+          <div class="esub">${earnedLabel} ${fmtMoney(e.earned)} · ${paidLabel} ${fmtMoney(e.paid)}</div>
         </div>
         <div style="text-align:right;">
           <div class="emp-debt ${cls}">${e.balance>0?'+':''}${fmtMoney(e.balance)}</div>
           <div class="btnrow" style="margin-top:6px; justify-content:flex-end;">
-            ${e.balance>0.01 ? `<button class="btn secondary" style="font-size:12.5px; padding:6px 12px;" data-payout-open="${e.name}" data-amount="${e.balance}">Внести выплату</button>` : ''}
+            ${e.balance>0.01 ? `<button class="btn secondary" style="font-size:12.5px; padding:6px 12px;" data-payout-open="${e.name}" data-amount="${e.balance}">${payoutBtnLabel}</button>` : ''}
             <button class="btn secondary" style="font-size:12.5px; padding:6px 12px;" data-adjust-open="${e.name}" data-balance="${e.balance}">Корректировка</button>
           </div>
         </div>
@@ -1080,7 +1086,7 @@ function renderPayroll(){
 
   const payouts = getPayouts(point).slice().sort((a,b)=> a.date<b.date?1:-1);
   if(payouts.length){
-    html += `<div class="card"><h2>Журнал выплат</h2>
+    html += `<div class="card"><h2>${isSelfEmployed ? 'Журнал возвратов' : 'Журнал выплат'}</h2>
       <div class="tablewrap"><table class="ledger">
         <thead><tr><th style="text-align:left">Сотрудник</th><th>Дата</th><th>Сумма</th><th style="text-align:left">Комментарий</th></tr></thead>
         <tbody>`;
@@ -1414,18 +1420,19 @@ function confirmDelete(date){
 }
 
 function openPayoutModal(name, debt){
+  const isSelfEmployed = POINTS[state.point].mode === 'selfEmployed';
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.innerHTML = `
     <div class="modal">
-      <h3>Выплата — ${name}</h3>
-      <p>Текущий долг: ${fmtMoney(debt)}. Можно внести любую сумму — остаток долга пересчитается автоматически.</p>
+      <h3>${isSelfEmployed ? 'Возврат от сотрудника' : 'Выплата'} — ${name}</h3>
+      <p>${isSelfEmployed ? 'Должен вернуть' : 'Текущий долг'}: ${fmtMoney(debt)}. Можно указать любую сумму — остаток пересчитается автоматически.</p>
       <div class="field">
-        <label>Сумма выплаты, ₽</label>
+        <label>${isSelfEmployed ? 'Сумма возврата, ₽' : 'Сумма выплаты, ₽'}</label>
         <input type="number" id="payoutAmount" inputmode="decimal" step="any" value="${debt}">
       </div>
       <div class="btnrow">
-        <button class="btn" id="confirmPayoutBtn">Сохранить выплату</button>
+        <button class="btn" id="confirmPayoutBtn">${isSelfEmployed ? 'Сохранить возврат' : 'Сохранить выплату'}</button>
         <button class="btn secondary" id="cancelPayoutBtn">Отмена</button>
       </div>
     </div>`;
@@ -1448,6 +1455,7 @@ function openPayoutModal(name, debt){
 
 async function markPayout(name, amount){
   const point = state.point;
+  const isSelfEmployed = POINTS[point].mode === 'selfEmployed';
   const date = todayStr();
   try{
     await sb('payouts', {
@@ -1456,11 +1464,13 @@ async function markPayout(name, amount){
       prefer: 'return=minimal',
     });
     await loadDB();
-    showToast(`Выплата ${fmtMoney(amount)} сотруднику ${name} сохранена`);
+    showToast(isSelfEmployed
+      ? `Возврат ${fmtMoney(amount)} от сотрудника ${name} сохранён`
+      : `Выплата ${fmtMoney(amount)} сотруднику ${name} сохранена`);
     render();
   }catch(e){
     console.error(e);
-    showToast('Не удалось сохранить выплату');
+    showToast('Не удалось сохранить');
   }
 }
 
@@ -1471,7 +1481,7 @@ function openAdjustmentModal(name, balance){
   overlay.innerHTML = `
     <div class="modal">
       <h3>Корректировка — ${name}</h3>
-      <p>Текущий остаток: ${balance>0?'+':''}${fmtMoney(balance)}. Корректировка меняет баланс на указанную сумму с учётом знака — положительная уменьшает долг сотруднику, отрицательная списывает переплату или фиксирует прощённый долг. Поле предзаполнено суммой, обнуляющей текущий остаток.</p>
+      <p>Текущий остаток: ${balance>0?'+':''}${fmtMoney(balance)}. Корректировка меняет остаток на указанную сумму с учётом знака. Поле предзаполнено суммой, обнуляющей текущий остаток.</p>
       <div class="field">
         <label>Сумма корректировки, ₽ (можно со знаком минус)</label>
         <input type="number" id="adjustAmount" inputmode="decimal" step="any" value="${suggestion}">
