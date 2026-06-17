@@ -36,6 +36,7 @@
     --ink-grad: linear-gradient(100deg, #FF7445 0%, #F8418A 38%, #D953D8 64%, #A37FF6 100%);
   }
   *{box-sizing:border-box;}
+  button, input, select, textarea{color:inherit; font-family:inherit;}
   html,body{margin:0;padding:0;}
   body{
     background:#0B0B0F;
@@ -112,6 +113,7 @@
     position:relative;
     transition:border-color .15s, transform .1s;
     font-family:var(--sans);
+    color:var(--ink);
   }
   .point-btn:hover{border-color:var(--line-strong);}
   .point-btn:active{transform:scale(0.99);}
@@ -201,6 +203,21 @@
   .btn.danger:hover{background:rgba(255,107,107,0.22); border-color:var(--red);}
   .btn:disabled{opacity:0.45; cursor:not-allowed;}
   .btnrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;}
+
+  .cash-type-btn{
+    background:var(--card); backdrop-filter:var(--glass-blur); -webkit-backdrop-filter:var(--glass-blur);
+    color:var(--ink-soft); border:1px solid var(--line-strong);
+    box-shadow:none;
+  }
+  .cash-type-btn:hover{color:var(--ink); border-color:var(--line-strong); background:var(--card);}
+  .cash-type-btn.active{
+    background:var(--green-pale); color:var(--green); border:1px solid rgba(61,214,140,0.45);
+    box-shadow:0 0 0 1px rgba(61,214,140,0.08), 0 4px 16px rgba(61,214,140,0.10);
+  }
+  .cash-type-btn[data-cash-type="withdrawal"].active{
+    background:var(--red-pale); color:var(--red); border:1px solid rgba(255,107,107,0.45);
+    box-shadow:0 0 0 1px rgba(255,107,107,0.08), 0 4px 16px rgba(255,107,107,0.10);
+  }
 
   /* RECEIPT PREVIEW */
   .receipt{
@@ -429,18 +446,19 @@ function showToast(msg){
 }
 
 async function loadDB(){
-  const [records, payouts, cost, employees] = await Promise.all([
-    sb('records?select=point,date,cash,cashless,deposit,withdrawal,employee,deduct_pct,staff_pct,z_report&order=date.asc'),
-    sb('payouts?select=point,employee,date,amount&order=date.asc'),
+  const [records, payouts, cost, employees, movements] = await Promise.all([
+    sb('records?select=point,date,cash,cashless,deduct_pct,staff_pct,employee,z_report&order=date.asc'),
+    sb('payouts?select=id,point,employee,date,amount,comment,is_adjustment&order=date.asc'),
     sb('cost_items?select=id,name,price,sheet_cost,ink_cost&order=id.asc'),
     sb('employees?select=id,name,archived&order=name.asc'),
+    sb('cash_movements?select=id,point,date,type,amount,comment&order=date.asc'),
   ]);
 
   const byPoint = {yakovleva:[], krasnodarskaya:[], kalinina:[]};
   records.forEach(r=>{
     if(!byPoint[r.point]) byPoint[r.point] = [];
     byPoint[r.point].push([
-      r.date, Number(r.cash), Number(r.cashless), Number(r.deposit), Number(r.withdrawal), r.employee||'',
+      r.date, Number(r.cash), Number(r.cashless), r.employee||'',
       r.deduct_pct!=null ? Number(r.deduct_pct) : 0,
       r.staff_pct!=null ? Number(r.staff_pct) : 30,
       r.z_report||'',
@@ -450,7 +468,16 @@ async function loadDB(){
   const payoutsByPoint = {yakovleva:[], krasnodarskaya:[], kalinina:[]};
   payouts.forEach(p=>{
     if(!payoutsByPoint[p.point]) payoutsByPoint[p.point] = [];
-    payoutsByPoint[p.point].push([p.employee, p.date, Number(p.amount)]);
+    payoutsByPoint[p.point].push({
+      id:p.id, employee:p.employee, date:p.date, amount:Number(p.amount),
+      comment:p.comment||'', isAdjustment:!!p.is_adjustment,
+    });
+  });
+
+  const movementsByPoint = {yakovleva:[], krasnodarskaya:[], kalinina:[]};
+  movements.forEach(m=>{
+    if(!movementsByPoint[m.point]) movementsByPoint[m.point] = [];
+    movementsByPoint[m.point].push({id:m.id, date:m.date, type:m.type, amount:Number(m.amount), comment:m.comment||''});
   });
 
   DB = {
@@ -458,34 +485,74 @@ async function loadDB(){
     payouts: payoutsByPoint,
     cost: cost.map(c=>[c.id, c.name, Number(c.price), Number(c.sheet_cost), Number(c.ink_cost)]),
     employees: employees.map(e=>({id:e.id, name:e.name, archived:!!e.archived})),
+    movements: movementsByPoint,
   };
 }
 
 function getRows(point){
   return (DB.records[point] || []).slice().sort((a,b)=> a[0]<b[0]?-1:1);
 }
+function getMovements(point){
+  return (DB.movements[point] || []).slice().sort((a,b)=> a.date<b.date?-1:(a.date>b.date?1:(a.id-b.id)));
+}
 function getPayouts(point){
-  return (DB.payouts[point] || []);
+  return (DB.payouts[point] || []).slice().sort((a,b)=> a.date<b.date?-1:(a.date>b.date?1:(a.id-b.id)));
+}
+
+function buildBalanceTimeline(point){
+  const rows = getRows(point);
+  const movements = getMovements(point);
+
+  const movementSumByDate = {};
+  movements.forEach(m=>{
+    if(!movementSumByDate[m.date]) movementSumByDate[m.date] = 0;
+    movementSumByDate[m.date] += (m.type==='deposit' ? m.amount : -m.amount);
+  });
+
+  const allDates = new Set(rows.map(r=>r[0]));
+  movements.forEach(m=> allDates.add(m.date));
+  const sortedDates = Array.from(allDates).sort();
+
+  let running = 0;
+  const balanceAtDate = {};
+  sortedDates.forEach(date=>{
+    const row = rows.find(r=>r[0]===date);
+    const cash = row ? (row[1]||0) : 0;
+    running = running + cash + (movementSumByDate[date]||0);
+    balanceAtDate[date] = running;
+  });
+
+  return {sortedDates, balanceAtDate, lastBalance: sortedDates.length ? balanceAtDate[sortedDates[sortedDates.length-1]] : 0};
 }
 
 function calcBalances(point){
   const rows = getRows(point);
-  let running = 0;
+  const {balanceAtDate} = buildBalanceTimeline(point);
+  const movements = getMovements(point);
+
+  const depositSumByDate = {};
+  const withdrawalSumByDate = {};
+  movements.forEach(m=>{
+    const map = m.type==='deposit' ? depositSumByDate : withdrawalSumByDate;
+    map[m.date] = (map[m.date]||0) + m.amount;
+  });
+
   return rows.map(r=>{
-    const [date, cash, cashless, deposit, withdrawal, employee, deductPct, staffPct, zReport] = r;
-    running = running + (cash||0) + (deposit||0) - (withdrawal||0);
+    const [date, cash, cashless, employee, deductPct, staffPct, zReport] = r;
     const total = (cash||0) + (cashless||0);
     const dPct = deductPct!=null ? deductPct : 0;
     const sPct = staffPct!=null ? staffPct : 30;
     const salary = total * (1 - dPct/100) * (sPct/100);
-    return {date, cash:cash||0, cashless:cashless||0, deposit:deposit||0, withdrawal:withdrawal||0, employee:employee||'', total, balance:running, salary, deductPct:dPct, staffPct:sPct, zReport:zReport||''};
+    return {
+      date, cash:cash||0, cashless:cashless||0, employee:employee||'', total, balance:balanceAtDate[date], salary,
+      deductPct:dPct, staffPct:sPct, zReport:zReport||'',
+      deposit: depositSumByDate[date]||0, withdrawal: withdrawalSumByDate[date]||0,
+    };
   });
 }
 
 function currentBalance(point){
-  const rows = calcBalances(point);
-  if(rows.length===0) return 0;
-  return rows[rows.length-1].balance;
+  return buildBalanceTimeline(point).lastBalance;
 }
 
 function employeeSummary(point){
@@ -502,7 +569,7 @@ function employeeSummary(point){
     if(r.date > map[name].lastDate) map[name].lastDate = r.date;
   });
   payouts.forEach(p=>{
-    const [name, date, amount] = p;
+    const {employee:name, date, amount} = p;
     if(archivedNames.has(name)) return;
     if(!map[name]) map[name] = {name, earned:0, shifts:0, lastDate:date};
     map[name].paid = (map[name].paid||0) + amount;
@@ -564,6 +631,7 @@ function renderPointSwitcher(){
 function renderTabs(){
   const tabs = [
     {key:'entry', label:'Ввод дня', icon:'ti-pencil-plus'},
+    {key:'cash', label:'Касса', icon:'ti-cash-banknote'},
     {key:'history', label:'История', icon:'ti-list'},
     {key:'staff', label:'Сотрудники', icon:'ti-users'},
     {key:'payroll', label:'Расчёт ЗП', icon:'ti-cash'},
@@ -579,6 +647,7 @@ function renderTabs(){
 
 function renderTabContent(){
   if(state.tab==='entry') return renderEntry();
+  if(state.tab==='cash') return renderCash();
   if(state.tab==='history') return renderHistory();
   if(state.tab==='staff') return renderStaff();
   if(state.tab==='payroll') return renderPayroll();
@@ -592,7 +661,7 @@ function renderEntry(){
   const existingDates = new Set(rows.map(r=>r.date));
   const today = todayStr();
   const defaultDate = existingDates.has(today) ? '' : today;
-  const lastBalance = rows.length ? rows[rows.length-1].balance : 0;
+  const lastBalance = currentBalance(point);
   const lastEmployee = rows.length ? rows[rows.length-1].employee : '';
   const lastDeductPct = rows.length ? rows[rows.length-1].deductPct : (POINTS[point].acquiring ? 6 : 0);
   const lastStaffPct = rows.length ? rows[rows.length-1].staffPct : 30;
@@ -640,17 +709,6 @@ function renderEntry(){
       </div>
     </div>
 
-    <div class="row2">
-      <div class="field">
-        <label>Внесение, ₽</label>
-        <input type="number" id="f-deposit" inputmode="decimal" placeholder="0" step="any">
-      </div>
-      <div class="field">
-        <label>Изъятие, ₽</label>
-        <input type="number" id="f-withdrawal" inputmode="decimal" placeholder="0" step="any">
-      </div>
-    </div>
-
     <div class="field">
       <label>Сотрудник</label>
       <select id="f-employee">
@@ -682,16 +740,105 @@ function renderEntry(){
     <div class="btnrow">
       <button class="btn" id="saveDayBtn"><i class="ti ti-check"></i> Сохранить день</button>
     </div>
-    <p class="footnote">Остаток в кассе = нал + внесение − изъятие + остаток предыдущего дня. Вариант «${PAID_MARK}» — для подменных сотрудников, которым доля выдана на месте: смена не попадает в долг по сотрудникам. Изменение формулы здесь не пересчитывает уже сохранённые прошлые дни.</p>
+    <p class="footnote">Остаток в кассе = нал + остаток предыдущего дня, с учётом внесений и изъятий (вкладка «Касса»). Вариант «${PAID_MARK}» — для подменных сотрудников, которым доля выдана на месте: смена не попадает в долг по сотрудникам. Изменение формулы здесь не пересчитывает уже сохранённые прошлые дни.</p>
   </div>
   `;
+}
+
+function renderCash(){
+  const point = state.point;
+  const balance = currentBalance(point);
+  const movements = getMovements(point).slice().reverse();
+  const today = todayStr();
+
+  let html = `
+  <div class="metrics">
+    <div class="metric">
+      <div class="mlabel">Остаток в кассе</div>
+      <div class="mval green">${fmtMoney(balance)}</div>
+    </div>
+    <div class="metric">
+      <div class="mlabel">Операций внесено</div>
+      <div class="mval">${movements.length}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Внесение / изъятие</h2>
+    <p class="hint">Точка: ${POINTS[point].name}. Операция не привязана к вводу дня — добавляйте в любой момент.</p>
+
+    <div class="field">
+      <label>Тип операции</label>
+      <div class="btnrow" id="cashTypeToggle">
+        <button class="btn cash-type-btn active" data-cash-type="deposit" style="flex:1;"><i class="ti ti-arrow-down-circle"></i> Внесение</button>
+        <button class="btn cash-type-btn" data-cash-type="withdrawal" style="flex:1;"><i class="ti ti-arrow-up-circle"></i> Изъятие</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Дата</label>
+      <input type="date" id="cm-date" value="${today}" max="${today}">
+    </div>
+
+    <div class="field">
+      <label>Сумма, ₽</label>
+      <input type="number" id="cm-amount" inputmode="decimal" placeholder="0" step="any">
+    </div>
+
+    <div class="field">
+      <label>Комментарий</label>
+      <input type="text" id="cm-comment" placeholder="например, на закупку бумаги">
+    </div>
+
+    <div class="btnrow">
+      <button class="btn" id="saveCashBtn"><i class="ti ti-check"></i> Сохранить операцию</button>
+    </div>
+    <p class="footnote">Внесение увеличивает остаток в кассе, изъятие — уменьшает. Учитывается в общем остатке наравне с продажами наличными.</p>
+  </div>`;
+
+  if(movements.length===0){
+    html += `<div class="card"><div class="empty-state"><i class="ti ti-receipt-off"></i>Пока нет внесений или изъятий для этой точки</div></div>`;
+  }else{
+    html += `<div class="card"><h2>История операций</h2>
+      <div class="tablewrap"><table class="ledger">
+        <thead><tr><th style="text-align:left">Дата</th><th style="text-align:left">Тип</th><th>Сумма</th><th style="text-align:left">Комментарий</th><th></th></tr></thead>
+        <tbody>`;
+    movements.forEach(m=>{
+      const isDeposit = m.type==='deposit';
+      html += `<tr>
+        <td style="text-align:left">${weekday(m.date)} ${fmtDate(m.date)}</td>
+        <td style="text-align:left; color:${isDeposit?'var(--green-deep)':'var(--red)'};">${isDeposit?'Внесение':'Изъятие'}</td>
+        <td>${fmt(m.amount)}</td>
+        <td style="text-align:left; color:var(--ink-soft); font-family:var(--sans); font-size:12.5px;">${m.comment||'—'}</td>
+        <td><span class="rowdel" data-del-movement="${m.id}" title="Удалить запись"><i class="ti ti-trash"></i></span></td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+
+    html += `<div class="day-cards">`;
+    movements.forEach(m=>{
+      const isDeposit = m.type==='deposit';
+      html += `<div class="day-card">
+        <div class="dc-top">
+          <div class="dc-date">${weekday(m.date)} ${fmtDate(m.date)}</div>
+          <span class="rowdel" data-del-movement="${m.id}" title="Удалить запись"><i class="ti ti-trash"></i></span>
+        </div>
+        <div class="dc-grid">
+          <div class="dc-item"><div class="dc-label">Тип</div><div class="dc-val" style="color:${isDeposit?'var(--green-deep)':'var(--red)'};">${isDeposit?'Внесение':'Изъятие'}</div></div>
+          <div class="dc-item"><div class="dc-label">Сумма</div><div class="dc-val">${fmt(m.amount)}</div></div>
+        </div>
+        ${m.comment ? `<div class="dc-emp">${m.comment}</div>` : ''}
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  return html;
 }
 
 function updateLivePreview(){
   const cash = parseFloat(document.getElementById('f-cash').value) || 0;
   const cashless = parseFloat(document.getElementById('f-cashless').value) || 0;
-  const deposit = parseFloat(document.getElementById('f-deposit').value) || 0;
-  const withdrawal = parseFloat(document.getElementById('f-withdrawal').value) || 0;
   const total = cash + cashless;
   const point = state.point;
   const deductPct = parseFloat(document.getElementById('f-deduct-pct').value) || 0;
@@ -701,9 +848,10 @@ function updateLivePreview(){
   const isPaid = empSelected === PAID_MARK;
 
   const dateVal = document.getElementById('f-date').value;
-  const rows = calcBalances(point).filter(r=>r.date < dateVal);
-  const prevBalance = rows.length ? rows[rows.length-1].balance : 0;
-  const newBalance = cash + deposit - withdrawal + prevBalance;
+  const {sortedDates, balanceAtDate} = buildBalanceTimeline(point);
+  const priorDates = sortedDates.filter(d=> d < dateVal);
+  const prevBalance = priorDates.length ? balanceAtDate[priorDates[priorDates.length-1]] : 0;
+  const newBalance = cash + prevBalance;
 
   const salaryLine = isPaid
     ? `<div class="rline"><span>Доля сотрудника</span><span>${fmtMoney(salary)} — выдана сразу, в долг не идёт</span></div>`
@@ -873,22 +1021,31 @@ function renderPayroll(){
         </div>
         <div style="text-align:right;">
           <div class="emp-debt ${cls}">${e.balance>0?'+':''}${fmtMoney(e.balance)}</div>
-          ${e.balance>0.01 ? `<button class="btn secondary" style="margin-top:6px; font-size:12.5px; padding:6px 12px;" data-payout-open="${e.name}" data-amount="${e.balance}">Внести выплату</button>` : ''}
+          <div class="btnrow" style="margin-top:6px; justify-content:flex-end;">
+            ${e.balance>0.01 ? `<button class="btn secondary" style="font-size:12.5px; padding:6px 12px;" data-payout-open="${e.name}" data-amount="${e.balance}">Внести выплату</button>` : ''}
+            <button class="btn secondary" style="font-size:12.5px; padding:6px 12px;" data-adjust-open="${e.name}" data-balance="${e.balance}">Корректировка</button>
+          </div>
         </div>
       </div>`;
     });
   }
   html += `</div>`;
 
-  const payouts = getPayouts(point).slice().sort((a,b)=> a[1]<b[1]?1:-1);
+  const payouts = getPayouts(point).slice().sort((a,b)=> a.date<b.date?1:-1);
   if(payouts.length){
     html += `<div class="card">
       <h2>Журнал выплат</h2>
       <div class="tablewrap"><table class="ledger">
-        <thead><tr><th style="text-align:left">Сотрудник</th><th>Дата</th><th>Сумма</th></tr></thead>
+        <thead><tr><th style="text-align:left">Сотрудник</th><th>Дата</th><th>Сумма</th><th style="text-align:left">Комментарий</th></tr></thead>
         <tbody>`;
     payouts.forEach(p=>{
-      html += `<tr><td class="emp" style="text-align:left">${p[0]}</td><td>${fmtDate(p[1])}</td><td>${fmtMoney(p[2])}</td></tr>`;
+      const amountColor = p.amount<0 ? 'var(--red)' : (p.isAdjustment ? 'var(--amber)' : 'inherit');
+      html += `<tr>
+        <td class="emp" style="text-align:left">${p.employee}${p.isAdjustment ? ' <span style="color:var(--amber); font-size:11px;">(корр.)</span>' : ''}</td>
+        <td>${fmtDate(p.date)}</td>
+        <td style="color:${amountColor};">${p.amount<0?'−':''}${fmtMoney(Math.abs(p.amount))}</td>
+        <td style="text-align:left; color:var(--ink-soft); font-family:var(--sans); font-size:12.5px;">${p.comment||'—'}</td>
+      </tr>`;
     });
     html += `</tbody></table></div></div>`;
   }
@@ -955,11 +1112,27 @@ function attachHandlers(){
       empNew.style.display = empSelect.value==='__new__' ? 'block' : 'none';
       updateLivePreview();
     });
-    ['f-cash','f-cashless','f-deposit','f-withdrawal','f-date','f-deduct-pct','f-staff-pct'].forEach(id=>{
+    ['f-cash','f-cashless','f-date','f-deduct-pct','f-staff-pct'].forEach(id=>{
       document.getElementById(id).addEventListener('input', updateLivePreview);
     });
     updateLivePreview();
     document.getElementById('saveDayBtn').addEventListener('click', saveDay);
+  }
+
+  if(state.tab==='cash'){
+    document.querySelectorAll('.cash-type-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.cash-type-btn').forEach(b=> b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+    document.getElementById('saveCashBtn').addEventListener('click', saveCashMovement);
+    document.querySelectorAll('[data-del-movement]').forEach(el=>{
+      el.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        confirmDeleteMovement(el.dataset.delMovement);
+      });
+    });
   }
 
   if(state.tab==='history'){
@@ -996,6 +1169,9 @@ function attachHandlers(){
     document.querySelectorAll('[data-payout-open]').forEach(btn=>{
       btn.addEventListener('click', ()=> openPayoutModal(btn.dataset.payoutOpen, parseFloat(btn.dataset.amount)));
     });
+    document.querySelectorAll('[data-adjust-open]').forEach(btn=>{
+      btn.addEventListener('click', ()=> openAdjustmentModal(btn.dataset.adjustOpen, parseFloat(btn.dataset.balance)));
+    });
   }
 
   if(state.tab==='cost'){
@@ -1023,8 +1199,6 @@ async function saveDay(){
   if(!date){ showToast('Укажите дату'); return; }
   const cash = parseFloat(document.getElementById('f-cash').value) || 0;
   const cashless = parseFloat(document.getElementById('f-cashless').value) || 0;
-  const deposit = parseFloat(document.getElementById('f-deposit').value) || 0;
-  const withdrawal = parseFloat(document.getElementById('f-withdrawal').value) || 0;
   const deductPct = parseFloat(document.getElementById('f-deduct-pct').value) || 0;
   const staffPct = parseFloat(document.getElementById('f-staff-pct').value) || 0;
   const zReport = document.getElementById('f-zreport').value.trim();
@@ -1048,7 +1222,7 @@ async function saveDay(){
     }
     await sb('records?on_conflict=point,date', {
       method:'POST',
-      body: JSON.stringify({point, date, cash, cashless, deposit, withdrawal, employee, deduct_pct:deductPct, staff_pct:staffPct, z_report:zReport}),
+      body: JSON.stringify({point, date, cash, cashless, employee, deduct_pct:deductPct, staff_pct:staffPct, z_report:zReport}),
       prefer: 'resolution=merge-duplicates,return=minimal',
     });
     await loadDB();
@@ -1059,6 +1233,63 @@ async function saveDay(){
     showToast('Не удалось сохранить — проверьте связь');
     btn.disabled = false;
   }
+}
+
+async function saveCashMovement(){
+  const point = state.point;
+  const date = document.getElementById('cm-date').value;
+  if(!date){ showToast('Укажите дату'); return; }
+  const amount = parseFloat(document.getElementById('cm-amount').value) || 0;
+  if(amount<=0){ showToast('Укажите сумму больше нуля'); return; }
+  const comment = document.getElementById('cm-comment').value.trim();
+  const type = document.querySelector('.cash-type-btn.active').dataset.cashType;
+
+  const btn = document.getElementById('saveCashBtn');
+  btn.disabled = true;
+  try{
+    await sb('cash_movements', {
+      method:'POST',
+      body: JSON.stringify({point, date, type, amount, comment}),
+      prefer: 'return=minimal',
+    });
+    await loadDB();
+    showToast(type==='deposit' ? 'Внесение сохранено' : 'Изъятие сохранено');
+    render();
+  }catch(e){
+    console.error(e);
+    showToast('Не удалось сохранить операцию — проверьте связь');
+    btn.disabled = false;
+  }
+}
+
+function confirmDeleteMovement(id){
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <h3>Удалить операцию?</h3>
+      <p>Запись о внесении/изъятии будет удалена без возможности восстановления.</p>
+      <div class="btnrow">
+        <button class="btn danger" id="confirmDelMoveBtn">Удалить</button>
+        <button class="btn secondary" id="cancelDelMoveBtn">Отмена</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById('confirmDelMoveBtn').addEventListener('click', async ()=>{
+    try{
+      await sb(`cash_movements?id=eq.${id}`, {method:'DELETE', prefer:'return=minimal'});
+      await loadDB();
+      showToast('Операция удалена');
+    }catch(e){
+      console.error(e);
+      showToast('Не удалось удалить операцию');
+    }
+    document.body.removeChild(overlay);
+    render();
+  });
+  document.getElementById('cancelDelMoveBtn').addEventListener('click', ()=>{
+    document.body.removeChild(overlay);
+  });
 }
 
 function confirmDelete(date){
@@ -1140,6 +1371,64 @@ async function markPayout(name, amount){
   }catch(e){
     console.error(e);
     showToast('Не удалось сохранить выплату');
+  }
+}
+
+function openAdjustmentModal(name, balance){
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  const suggestion = Math.round(balance*100)/100;
+  overlay.innerHTML = `
+    <div class="modal">
+      <h3>Корректировка — ${name}</h3>
+      <p>Текущий остаток: ${balance>0?'+':''}${fmtMoney(balance)}. Корректировка меняет баланс на указанную сумму с учётом знака — положительная уменьшает долг сотруднику, отрицательная списывает переплату или фиксирует прощённый долг. Поле предзаполнено суммой, обнуляющей текущий остаток.</p>
+      <div class="field">
+        <label>Сумма корректировки, ₽ (можно со знаком минус)</label>
+        <input type="number" id="adjustAmount" inputmode="decimal" step="any" value="${suggestion}">
+      </div>
+      <div class="field">
+        <label>Комментарий — причина корректировки</label>
+        <input type="text" id="adjustComment" placeholder="например, простили остаток / ошибка в расчётах">
+      </div>
+      <div class="btnrow">
+        <button class="btn" id="confirmAdjustBtn">Сохранить корректировку</button>
+        <button class="btn secondary" id="cancelAdjustBtn">Отмена</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const input = document.getElementById('adjustAmount');
+  input.focus();
+  input.select();
+  const close = ()=> document.body.removeChild(overlay);
+  document.getElementById('confirmAdjustBtn').addEventListener('click', async ()=>{
+    const amount = parseFloat(input.value);
+    if(!amount){ showToast('Укажите сумму, отличную от нуля'); return; }
+    const comment = document.getElementById('adjustComment').value.trim();
+    if(!comment){ showToast('Укажите причину корректировки'); return; }
+    close();
+    await saveAdjustment(name, amount, comment);
+  });
+  document.getElementById('cancelAdjustBtn').addEventListener('click', close);
+  input.addEventListener('keydown', e=>{
+    if(e.key==='Enter') document.getElementById('confirmAdjustBtn').click();
+  });
+}
+
+async function saveAdjustment(name, amount, comment){
+  const point = state.point;
+  const date = todayStr();
+  try{
+    await sb('payouts', {
+      method:'POST',
+      body: JSON.stringify({point, employee:name, date, amount: Math.round(amount*100)/100, comment, is_adjustment:true}),
+      prefer: 'return=minimal',
+    });
+    await loadDB();
+    showToast(`Корректировка по ${name} сохранена`);
+    render();
+  }catch(e){
+    console.error(e);
+    showToast('Не удалось сохранить корректировку');
   }
 }
 
