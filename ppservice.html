@@ -1033,8 +1033,7 @@ function renderPayroll(){
 
   const payouts = getPayouts(point).slice().sort((a,b)=> a.date<b.date?1:-1);
   if(payouts.length){
-    html += `<div class="card">
-      <h2>Журнал выплат</h2>
+    html += `<div class="card"><h2>Журнал выплат</h2>
       <div class="tablewrap"><table class="ledger">
         <thead><tr><th style="text-align:left">Сотрудник</th><th>Дата</th><th>Сумма</th><th style="text-align:left">Комментарий</th></tr></thead>
         <tbody>`;
@@ -1047,7 +1046,23 @@ function renderPayroll(){
         <td style="text-align:left; color:var(--ink-soft); font-family:var(--sans); font-size:12.5px;">${p.comment||'—'}</td>
       </tr>`;
     });
-    html += `</tbody></table></div></div>`;
+    html += `</tbody></table></div>`;
+
+    html += `<div class="day-cards">`;
+    payouts.forEach(p=>{
+      const amountColor = p.amount<0 ? 'var(--red)' : (p.isAdjustment ? 'var(--amber)' : 'var(--ink)');
+      html += `<div class="day-card">
+        <div class="dc-top">
+          <div class="dc-date">${p.employee}${p.isAdjustment ? ' <span style="color:var(--amber); font-size:11px;">(корр.)</span>' : ''}</div>
+        </div>
+        <div class="dc-grid">
+          <div class="dc-item"><div class="dc-label">Дата</div><div class="dc-val">${fmtDate(p.date)}</div></div>
+          <div class="dc-item"><div class="dc-label">Сумма</div><div class="dc-val" style="color:${amountColor};">${p.amount<0?'−':''}${fmtMoney(Math.abs(p.amount))}</div></div>
+        </div>
+        ${p.comment ? `<div class="dc-emp">${p.comment}</div>` : ''}
+      </div>`;
+    });
+    html += `</div></div>`;
   }
   return html;
 }
@@ -1077,8 +1092,36 @@ function renderCost(){
       <td>${fmtMoney(profit)}</td>
     </tr>`;
   });
-  html += `</tbody></table></div>
-    <p class="footnote">Расходы = стоимость листа + краска + ЗП сотрудника (30% от цены). Прибыль = цена × 93% − расходы.</p>
+  html += `</tbody></table></div>`;
+
+  html += `<div class="day-cards">`;
+  cost.forEach(c=>{
+    const [id, name, price, sheet, ink] = c;
+    const salary = price*0.30;
+    const expenses = sheet+ink+salary;
+    const marginBefore = (price-expenses)/price;
+    const profit = price*0.93-expenses;
+    html += `<div class="day-card">
+      <div class="dc-top">
+        <div class="dc-date">${name}</div>
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label style="text-transform:none; font-size:11px;">Цена, ₽</label>
+        <input type="number" data-cost-price="${id}" value="${price}">
+      </div>
+      <div class="dc-grid">
+        <div class="dc-item"><div class="dc-label">Лист</div><div class="dc-val">${fmt(sheet)}</div></div>
+        <div class="dc-item"><div class="dc-label">Краска</div><div class="dc-val">${fmt(ink)}</div></div>
+        <div class="dc-item"><div class="dc-label">ЗП (30%)</div><div class="dc-val">${fmt(salary)}</div></div>
+        <div class="dc-item"><div class="dc-label">Расходы</div><div class="dc-val">${fmt(expenses)}</div></div>
+        <div class="dc-item"><div class="dc-label">Маржа до нал.</div><div class="dc-val">${(marginBefore*100).toFixed(1)}%</div></div>
+        <div class="dc-item"><div class="dc-label">Прибыль</div><div class="dc-val">${fmtMoney(profit)}</div></div>
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  html += `<p class="footnote">Расходы = стоимость листа + краска + ЗП сотрудника (30% от цены). Прибыль = цена × 93% − расходы.</p>
   </div>`;
   return html;
 }
