@@ -1301,6 +1301,8 @@ function attachHandlers(){
   }
 }
 
+const AUTO_WITHDRAWAL_COMMENT = 'авто: выручка у сотрудника на руках (самозанятость)';
+
 async function saveDay(){
   const point = state.point;
   const date = document.getElementById('f-date').value;
@@ -1333,6 +1335,22 @@ async function saveDay(){
       body: JSON.stringify({point, date, cash, cashless, employee, deduct_pct:deductPct, staff_pct:staffPct, z_report:zReport}),
       prefer: 'resolution=merge-duplicates,return=minimal',
     });
+
+    if(POINTS[point].mode === 'selfEmployed'){
+      // Убираем прежнее авто-изъятие за эту дату (если день редактировался повторно),
+      // чтобы не плодить дубли, и создаём новое на актуальную сумму нал.
+      await sb(`cash_movements?point=eq.${point}&date=eq.${date}&type=eq.withdrawal&comment=eq.${encodeURIComponent(AUTO_WITHDRAWAL_COMMENT)}`, {
+        method:'DELETE', prefer:'return=minimal',
+      });
+      if(cash > 0){
+        await sb('cash_movements', {
+          method:'POST',
+          body: JSON.stringify({point, date, type:'withdrawal', amount:cash, comment:AUTO_WITHDRAWAL_COMMENT}),
+          prefer: 'return=minimal',
+        });
+      }
+    }
+
     await loadDB();
     showToast('День сохранён');
     render();
@@ -1447,6 +1465,11 @@ function confirmDelete(date){
     const point = state.point;
     try{
       await sb(`records?point=eq.${point}&date=eq.${date}`, {method:'DELETE', prefer:'return=minimal'});
+      if(POINTS[point].mode === 'selfEmployed'){
+        await sb(`cash_movements?point=eq.${point}&date=eq.${date}&type=eq.withdrawal&comment=eq.${encodeURIComponent(AUTO_WITHDRAWAL_COMMENT)}`, {
+          method:'DELETE', prefer:'return=minimal',
+        });
+      }
       await loadDB();
       showToast('Запись удалена');
     }catch(e){
@@ -1465,6 +1488,7 @@ function openPayoutModal(name, debt){
   const isSelfEmployed = POINTS[state.point].mode === 'selfEmployed';
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
+  const today = todayStr();
   overlay.innerHTML = `
     <div class="modal">
       <h3>${isSelfEmployed ? 'Возврат от сотрудника' : 'Выплата'} — ${name}</h3>
@@ -1472,6 +1496,10 @@ function openPayoutModal(name, debt){
       <div class="field">
         <label>${isSelfEmployed ? 'Сумма возврата, ₽' : 'Сумма выплаты, ₽'}</label>
         <input type="number" id="payoutAmount" inputmode="decimal" step="any" value="${debt}">
+      </div>
+      <div class="field">
+        <label>Дата ${isSelfEmployed ? 'возврата' : 'выплаты'}</label>
+        <input type="date" id="payoutDate" value="${today}" max="${today}">
       </div>
       <div class="btnrow">
         <button class="btn" id="confirmPayoutBtn">${isSelfEmployed ? 'Сохранить возврат' : 'Сохранить выплату'}</button>
@@ -1486,8 +1514,10 @@ function openPayoutModal(name, debt){
   document.getElementById('confirmPayoutBtn').addEventListener('click', async ()=>{
     const amount = parseFloat(input.value);
     if(!amount || amount<=0){ showToast('Укажите сумму больше нуля'); return; }
+    const date = document.getElementById('payoutDate').value;
+    if(!date){ showToast('Укажите дату'); return; }
     close();
-    await markPayout(name, amount);
+    await markPayout(name, amount, date);
   });
   document.getElementById('cancelPayoutBtn').addEventListener('click', close);
   input.addEventListener('keydown', e=>{
@@ -1495,10 +1525,10 @@ function openPayoutModal(name, debt){
   });
 }
 
-async function markPayout(name, amount){
+async function markPayout(name, amount, date){
   const point = state.point;
   const isSelfEmployed = POINTS[point].mode === 'selfEmployed';
-  const date = todayStr();
+  date = date || todayStr();
   try{
     await sb('payouts', {
       method:'POST',
