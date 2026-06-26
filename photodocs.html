@@ -497,6 +497,7 @@ function generate() {
   const GAP_MM = 3;       // отступ между фото
   const MARK_MM = 4;      // длина линии отреза
   const MARK_OFFSET = 1;  // отступ линии от угла фото
+  const MARGIN_MM = 6;    // отступ от края листа (чтобы линии не обрезались)
 
   const canvasW = Math.round(paper.w * ppm);
   const canvasH = Math.round(paper.h * ppm);
@@ -506,10 +507,13 @@ function generate() {
   const gap = Math.round(GAP_MM * ppm);
   const markLen = Math.round(MARK_MM * ppm);
   const markOff = Math.round(MARK_OFFSET * ppm);
+  const margin = Math.round(MARGIN_MM * ppm);
 
-  // Считаем сколько влезет с отступами
-  const cols = Math.floor((paper.w + GAP_MM) / (selectedW + GAP_MM));
-  const rows = Math.floor((paper.h + GAP_MM) / (selectedH + GAP_MM));
+  // Считаем сколько влезет с учётом отступов от краёв
+  const availW = paper.w - MARGIN_MM * 2;
+  const availH = paper.h - MARGIN_MM * 2;
+  const cols = Math.floor((availW + GAP_MM) / (selectedW + GAP_MM));
+  const rows = Math.floor((availH + GAP_MM) / (selectedH + GAP_MM));
   const total = cols * rows;
 
   // Центрируем сетку на листе
@@ -537,8 +541,8 @@ function generate() {
       drawCroppedPhoto(ctx, photoImg, x, y, photoW, photoH);
 
       // Линии отреза
-      ctx.strokeStyle = '#aaaaaa';
-      ctx.lineWidth = Math.round(0.3 * ppm);
+      ctx.strokeStyle = '#999999';
+      ctx.lineWidth = Math.round(0.25 * ppm);
       ctx.setLineDash([Math.round(1.5 * ppm), Math.round(1 * ppm)]);
 
       const corners = [
@@ -575,11 +579,74 @@ function generate() {
   resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   document.getElementById('result-info').textContent =
-    `${cols} × ${rows} = ${total} фото на листе ${paper.label} · Отступ ${GAP_MM} мм · Печать без полей · 300 dpi`;
+    `${cols} × ${rows} = ${total} фото на листе ${paper.label} · Отступ от края ${MARGIN_MM} мм · 300 dpi`;
 
   const link = document.getElementById('btn-download');
-  link.href = canvas.toDataURL('image/png');
+  link.href = canvasToPNG300dpi(canvas);
   link.download = `foto_${selectedW}x${selectedH}_${selectedPaper}.png`;
+}
+
+// Записывает PNG с метаданными 300 DPI (chunk pHYs)
+function canvasToPNG300dpi(canvas) {
+  const base64 = canvas.toDataURL('image/png').split(',')[1];
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+  // PNG chunk pHYs: 300 dpi = 11811 пикселей на метр
+  const PX_PER_METER = 11811;
+  function uint32be(n) {
+    return [(n >> 24) & 0xff, (n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
+  }
+
+  // Строим chunk pHYs (9 байт данных)
+  const chunkData = new Uint8Array([
+    ...uint32be(PX_PER_METER), // X
+    ...uint32be(PX_PER_METER), // Y
+    1                          // unit = meter
+  ]);
+  const chunkType = [0x70, 0x48, 0x59, 0x73]; // 'pHYs'
+  const chunkLen = uint32be(chunkData.length);
+
+  // CRC считаем для type + data
+  const crcData = new Uint8Array(chunkType.length + chunkData.length);
+  crcData.set(chunkType, 0);
+  crcData.set(chunkData, chunkType.length);
+  const crc = crc32(crcData);
+
+  const physChunk = new Uint8Array([
+    ...chunkLen, ...chunkType, ...chunkData, ...uint32be(crc)
+  ]);
+
+  // Вставляем pHYs после IHDR (первый chunk, 8 сигнатура + 4len + 4type + 13data + 4crc = 33 байта)
+  const insertAt = 33;
+  const result = new Uint8Array(bytes.length + physChunk.length);
+  result.set(bytes.slice(0, insertAt), 0);
+  result.set(physChunk, insertAt);
+  result.set(bytes.slice(insertAt), insertAt + physChunk.length);
+
+  const blob = new Blob([result], { type: 'image/png' });
+  return URL.createObjectURL(blob);
+}
+
+// CRC32 для PNG chunks
+function crc32(data) {
+  const table = makeCRCTable();
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < data.length; i++) {
+    crc = (crc >>> 8) ^ table[(crc ^ data[i]) & 0xFF];
+  }
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+function makeCRCTable() {
+  const table = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    table[n] = c;
+  }
+  return table;
 }
 
 // Обрезаем фото по центру в нужный прямоугольник
