@@ -412,26 +412,16 @@ body {
     <!-- ШАГ 1: Размер фото -->
     <div class="step">
       <div class="step-label">Шаг 1</div>
-      <h2>Размер фотографии</h2>
+      <h2>Размер исходной фотографии</h2>
       <div class="options" id="size-options">
         <button class="option-btn active" data-w="35" data-h="45">35 × 45 мм</button>
         <button class="option-btn" data-w="30" data-h="40">30 × 40 мм</button>
       </div>
     </div>
 
-    <!-- ШАГ 2: Бумага -->
+
     <div class="step">
       <div class="step-label">Шаг 2</div>
-      <h2>Формат бумаги</h2>
-      <div class="options" id="paper-options">
-        <button class="option-btn active" data-paper="10x15">10 × 15 см</button>
-        <button class="option-btn" data-paper="a4">А4</button>
-      </div>
-    </div>
-
-    <!-- ШАГ 3: Загрузка фото -->
-    <div class="step">
-      <div class="step-label">Шаг 3</div>
       <h2>Загрузите фото</h2>
 
       <div class="upload-zone" id="upload-zone">
@@ -488,14 +478,7 @@ document.querySelectorAll('#size-options .option-btn').forEach(btn => {
   });
 });
 
-document.querySelectorAll('#paper-options .option-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#paper-options .option-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedPaper = btn.dataset.paper;
-  });
-});
-
+// OPTION BUTTONS — размер фото
 // DRAG & DROP
 const zone = document.getElementById('upload-zone');
 zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
