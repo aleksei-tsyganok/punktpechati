@@ -385,7 +385,8 @@ body {
   .step { padding: 20px 16px; }
 }
 </style>
-</head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <body>
 
 <header class="header">
@@ -459,6 +460,7 @@ body {
     <canvas id="result-canvas"></canvas>
     <p class="result-info" id="result-info"></p>
     <a id="btn-download" class="btn-download" download="photo_doc.png">Скачать PNG</a>
+    <button id="btn-pdf" class="btn-download" style="margin-top:10px; background:var(--surface2); color:var(--text); border:1px solid var(--border-hover);" onclick="downloadPDF()">Скачать PDF (точный размер)</button>
   </div>
 
 </main>
@@ -633,7 +635,79 @@ function generate() {
   link.download = `foto_${selectedW}x${selectedH}_${selectedPaper}.png`;
 }
 
-// Записывает PNG с метаданными 300 DPI (chunk pHYs)
+function downloadPDF() {
+  if (!photoImg) return;
+
+  const paper = PAPER[selectedPaper];
+  const { jsPDF } = window.jspdf;
+
+  // Создаём PDF точно размером с бумагу в мм
+  const pdf = new jsPDF({
+    orientation: paper.w > paper.h ? 'landscape' : 'portrait',
+    unit: 'mm',
+    format: [paper.w, paper.h]
+  });
+
+  const GAP_MM = 3;
+  const MARK_MM = 4;
+  const MARK_OFFSET = 1;
+  const MARGIN_MM = 6;
+
+  const availW = paper.w - MARGIN_MM * 2;
+  const availH = paper.h - MARGIN_MM * 2;
+  const cols = Math.floor((availW + GAP_MM) / (selectedW + GAP_MM));
+  const rows = Math.floor((availH + GAP_MM) / (selectedH + GAP_MM));
+
+  const gridW = cols * selectedW + (cols - 1) * GAP_MM;
+  const gridH = rows * selectedH + (rows - 1) * GAP_MM;
+  const offsetX = (paper.w - gridW) / 2;
+  const offsetY = (paper.h - gridH) / 2;
+
+  // Рисуем каждое фото через временный canvas
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const x = offsetX + c * (selectedW + GAP_MM);
+      const y = offsetY + r * (selectedH + GAP_MM);
+
+      // Временный canvas для одного фото
+      const tmp = document.createElement('canvas');
+      const ppm = 11.811;
+      tmp.width = Math.round(selectedW * ppm);
+      tmp.height = Math.round(selectedH * ppm);
+      const tctx = tmp.getContext('2d');
+      drawCroppedPhoto(tctx, photoImg, 0, 0, tmp.width, tmp.height);
+
+      pdf.addImage(tmp.toDataURL('image/jpeg', 0.95), 'JPEG', x, y, selectedW, selectedH);
+    }
+  }
+
+  // Линии отреза
+  pdf.setDrawColor(150, 150, 150);
+  pdf.setLineWidth(0.2);
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const x = offsetX + c * (selectedW + GAP_MM);
+      const y = offsetY + r * (selectedH + GAP_MM);
+
+      const corners = [
+        [x, y, -1, -1],
+        [x + selectedW, y, 1, -1],
+        [x, y + selectedH, -1, 1],
+        [x + selectedW, y + selectedH, 1, 1]
+      ];
+
+      corners.forEach(([cx, cy, dx, dy]) => {
+        pdf.line(cx + dx * MARK_OFFSET, cy, cx + dx * (MARK_OFFSET + MARK_MM), cy);
+        pdf.line(cx, cy + dy * MARK_OFFSET, cx, cy + dy * (MARK_OFFSET + MARK_MM));
+      });
+    }
+  }
+
+  pdf.save(`foto_${selectedW}x${selectedH}_${selectedPaper}.pdf`);
+}
+
+
 function canvasToPNG300dpi(canvas) {
   const base64 = canvas.toDataURL('image/png').split(',')[1];
   const binary = atob(base64);
