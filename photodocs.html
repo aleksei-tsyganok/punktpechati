@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Фото на документы — Пункт Печати</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --grad: linear-gradient(135deg, #ffd60a 0%, #ff9f0a 20%, #ff375f 42%, #bf5af2 65%, #64d2ff 85%, #30d158 100%);
+  --grad-btn: linear-gradient(135deg, #ffd60a, #ff375f, #bf5af2, #64d2ff);
+  --bg: #080808;
+  --surface: #111111;
+  --surface2: #181818;
+  --surface3: #1f1f1f;
+  --border: rgba(255,255,255,0.07);
+  --border-hover: rgba(255,255,255,0.16);
+  --text: #f0f0f0;
+  --text-muted: rgba(255,255,255,0.44);
+  --text-dim: rgba(255,255,255,0.25);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(8,8,8,0.88);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+}
+
+.header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-mark {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border-hover);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.logo-mark span {
+  font-size: 17px; font-weight: 700;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.03em;
+}
+
+.header-tagline {
+  font-size: 12px; font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.back-link {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+  display: flex; align-items: center; gap: 6px;
+  transition: color 0.2s;
+}
+.back-link:hover { color: var(--text); }
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 48px 20px 80px;
+}
+
+.hero-title {
+  font-size: clamp(24px, 4vw, 38px);
+  font-weight: 700;
+  margin: 0 0 8px;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.hero-title span {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-sub {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0 0 32px;
+  line-height: 1.6;
+}
+
+.grad-line {
+  height: 1px;
+  background: var(--grad);
+  opacity: 0.4;
+  margin-bottom: 36px;
+}
+
+/* STEPS */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.step {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+}
+
+.step-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+}
+
+.step h2 {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0 0 20px;
+  letter-spacing: -0.01em;
+}
+
+/* OPTIONS GRID */
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.option-btn {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 18px;
+  color: var(--text);
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s;
+}
+
+.option-btn:hover { border-color: var(--border-hover); }
+
+.option-btn.active {
+  border-color: transparent;
+  background: var(--surface3);
+  position: relative;
+}
+
+.option-btn.active::after {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: 11px;
+  background: var(--grad-btn);
+  z-index: -1;
+}
+
+/* UPLOAD ZONE */
+.upload-zone {
+  border: 1.5px dashed rgba(100,210,255,0.25);
+  border-radius: 12px;
+  background: var(--surface2);
+  padding: 36px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  position: relative;
+}
+
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: rgba(100,210,255,0.5);
+  background: var(--surface3);
+}
+
+.upload-zone input[type="file"] {
+  position: absolute; inset: 0;
+  opacity: 0; cursor: pointer;
+  width: 100%; height: 100%;
+  margin: 0; padding: 0; border: none;
+}
+
+.upload-icon { font-size: 32px; margin-bottom: 10px; }
+
+.upload-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* PREVIEW */
+#preview-wrap {
+  display: none;
+  text-align: center;
+}
+
+#preview-img {
+  max-height: 180px;
+  max-width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  object-fit: cover;
+}
+
+.change-link {
+  display: block;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* GENERATE BUTTON */
+.btn-generate {
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--grad-btn);
+  border: none;
+  color: #000;
+  font-family: Inter, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  margin-top: 8px;
+}
+
+.btn-generate:hover {
+  opacity: 0.88;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(100,210,255,0.18);
+}
+
+.btn-generate:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* RESULT */
+#result-section {
+  display: none;
+  margin-top: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+}
+
+#result-section h2 {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0 0 16px;
+}
+
+#result-canvas {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  display: block;
+}
+
+.btn-download {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--grad-btn);
+  border: none;
+  color: #000;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  margin-top: 16px;
+  transition: opacity 0.2s, transform 0.15s;
+  letter-spacing: 0.01em;
+}
+
+.btn-download:hover {
+  opacity: 0.88;
+  transform: translateY(-2px);
+}
+
+.result-info {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 12px;
+  line-height: 1.6;
+}
+
+@media (max-width: 600px) {
+  .step { padding: 20px 16px; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <a href="index.html" class="logo-mark">
+      <span>ПП</span>
+    </a>
+    <div class="header-tagline">Пункт Печати</div>
+    <a href="index.html" class="back-link">
+      ← На главную
+    </a>
+  </div>
+</header>
+
+<main class="container">
+
+  <h1 class="hero-title">Фото <span>на документы</span></h1>
+  <p class="hero-sub">Загрузите фото — получите готовый лист для печати без полей</p>
+  <div class="grad-line"></div>
+
+  <div class="steps">
+
+    <!-- ШАГ 1: Размер фото -->
+    <div class="step">
+      <div class="step-label">Шаг 1</div>
+      <h2>Размер фотографии</h2>
+      <div class="options" id="size-options">
+        <button class="option-btn active" data-w="35" data-h="45">35 × 45 мм</button>
+        <button class="option-btn" data-w="30" data-h="40">30 × 40 мм</button>
+      </div>
+    </div>
+
+    <!-- ШАГ 2: Бумага -->
+    <div class="step">
+      <div class="step-label">Шаг 2</div>
+      <h2>Формат бумаги</h2>
+      <div class="options" id="paper-options">
+        <button class="option-btn active" data-paper="10x15">10 × 15 см</button>
+        <button class="option-btn" data-paper="a4">А4</button>
+      </div>
+    </div>
+
+    <!-- ШАГ 3: Загрузка фото -->
+    <div class="step">
+      <div class="step-label">Шаг 3</div>
+      <h2>Загрузите фото</h2>
+
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" id="file-input" accept="image/*">
+        <div class="upload-icon">🖼️</div>
+        <p class="upload-text">Нажмите или перетащите фото</p>
+        <p class="upload-hint">JPG, PNG, WEBP — любой формат</p>
+      </div>
+
+      <div id="preview-wrap">
+        <img id="preview-img" src="" alt="Превью">
+        <span class="change-link" onclick="resetPhoto()">Загрузить другое фото</span>
+      </div>
+
+      <button class="btn-generate" id="btn-generate" disabled onclick="generate()">
+        Сформировать лист
+      </button>
+    </div>
+
+  </div>
+
+  <!-- РЕЗУЛЬТАТ -->
+  <div id="result-section">
+    <div class="step-label">Результат</div>
+    <h2>Готово — скачайте PNG</h2>
+    <canvas id="result-canvas"></canvas>
+    <p class="result-info" id="result-info"></p>
+    <a id="btn-download" class="btn-download" download="photo_doc.png">Скачать PNG</a>
+  </div>
+
+</main>
+
+<script>
+// STATE
+let selectedW = 35, selectedH = 45;
+let selectedPaper = '10x15';
+let photoImg = null;
+
+// Размеры бумаги в мм (без полей — вся область)
+const PAPER = {
+  '10x15': { w: 100, h: 150, label: '10×15 см' },
+  'a4':    { w: 210, h: 297, label: 'А4' }
+};
+
+const PX_PER_MM = 11.811; // 300 dpi = 11.811 px/mm
+
+// OPTION BUTTONS
+document.querySelectorAll('#size-options .option-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#size-options .option-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedW = parseInt(btn.dataset.w);
+    selectedH = parseInt(btn.dataset.h);
+  });
+});
+
+document.querySelectorAll('#paper-options .option-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#paper-options .option-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedPaper = btn.dataset.paper;
+  });
+});
+
+// DRAG & DROP
+const zone = document.getElementById('upload-zone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) loadFile(file);
+});
+
+document.getElementById('file-input').addEventListener('change', e => {
+  if (e.target.files[0]) loadFile(e.target.files[0]);
+});
+
+function loadFile(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      photoImg = img;
+      document.getElementById('preview-img').src = ev.target.result;
+      document.getElementById('upload-zone').style.display = 'none';
+      document.getElementById('preview-wrap').style.display = 'block';
+      document.getElementById('btn-generate').disabled = false;
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetPhoto() {
+  photoImg = null;
+  document.getElementById('file-input').value = '';
+  document.getElementById('upload-zone').style.display = 'block';
+  document.getElementById('preview-wrap').style.display = 'none';
+  document.getElementById('btn-generate').disabled = true;
+  document.getElementById('result-section').style.display = 'none';
+}
+
+function generate() {
+  if (!photoImg) return;
+
+  const paper = PAPER[selectedPaper];
+  const ppm = PX_PER_MM;
+
+  const GAP_MM = 3;       // отступ между фото
+  const MARK_MM = 4;      // длина линии отреза
+  const MARK_OFFSET = 1;  // отступ линии от угла фото
+
+  const canvasW = Math.round(paper.w * ppm);
+  const canvasH = Math.round(paper.h * ppm);
+
+  const photoW = Math.round(selectedW * ppm);
+  const photoH = Math.round(selectedH * ppm);
+  const gap = Math.round(GAP_MM * ppm);
+  const markLen = Math.round(MARK_MM * ppm);
+  const markOff = Math.round(MARK_OFFSET * ppm);
+
+  // Считаем сколько влезет с отступами
+  const cols = Math.floor((paper.w + GAP_MM) / (selectedW + GAP_MM));
+  const rows = Math.floor((paper.h + GAP_MM) / (selectedH + GAP_MM));
+  const total = cols * rows;
+
+  // Центрируем сетку на листе
+  const gridW = cols * photoW + (cols - 1) * gap;
+  const gridH = rows * photoH + (rows - 1) * gap;
+  const offsetX = Math.round((canvasW - gridW) / 2);
+  const offsetY = Math.round((canvasH - gridH) / 2);
+
+  const canvas = document.getElementById('result-canvas');
+  canvas.width = canvasW;
+  canvas.height = canvasH;
+  const ctx = canvas.getContext('2d');
+
+  // Белый фон
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvasW, canvasH);
+
+  // Рисуем фото и линии отреза
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const x = offsetX + c * (photoW + gap);
+      const y = offsetY + r * (photoH + gap);
+
+      // Фото
+      drawCroppedPhoto(ctx, photoImg, x, y, photoW, photoH);
+
+      // Линии отреза
+      ctx.strokeStyle = '#aaaaaa';
+      ctx.lineWidth = Math.round(0.3 * ppm);
+      ctx.setLineDash([Math.round(1.5 * ppm), Math.round(1 * ppm)]);
+
+      const corners = [
+        [x, y],
+        [x + photoW, y],
+        [x, y + photoH],
+        [x + photoW, y + photoH]
+      ];
+
+      corners.forEach(([cx, cy]) => {
+        const dx = cx === x ? -1 : 1;
+        const dy = cy === y ? -1 : 1;
+
+        // горизонтальная линия
+        ctx.beginPath();
+        ctx.moveTo(cx + dx * markOff, cy);
+        ctx.lineTo(cx + dx * (markOff + markLen), cy);
+        ctx.stroke();
+
+        // вертикальная линия
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + dy * markOff);
+        ctx.lineTo(cx, cy + dy * (markOff + markLen));
+        ctx.stroke();
+      });
+    }
+  }
+
+  ctx.setLineDash([]);
+
+  // Показываем результат
+  const resultSection = document.getElementById('result-section');
+  resultSection.style.display = 'block';
+  resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  document.getElementById('result-info').textContent =
+    `${cols} × ${rows} = ${total} фото на листе ${paper.label} · Отступ ${GAP_MM} мм · Печать без полей · 300 dpi`;
+
+  const link = document.getElementById('btn-download');
+  link.href = canvas.toDataURL('image/png');
+  link.download = `foto_${selectedW}x${selectedH}_${selectedPaper}.png`;
+}
+
+// Обрезаем фото по центру в нужный прямоугольник
+function drawCroppedPhoto(ctx, img, dx, dy, dw, dh) {
+  const srcAspect = img.width / img.height;
+  const dstAspect = dw / dh;
+
+  let sx, sy, sw, sh;
+  if (srcAspect > dstAspect) {
+    sh = img.height;
+    sw = sh * dstAspect;
+    sx = (img.width - sw) / 2;
+    sy = 0;
+  } else {
+    sw = img.width;
+    sh = sw / dstAspect;
+    sx = 0;
+    sy = (img.height - sh) / 2;
+  }
+
+  ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+}
+</script>
+
+</body>
+</html>
