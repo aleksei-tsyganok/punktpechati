@@ -8,38 +8,38 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#0B0B0F;
+    --paper:#080808;
     --paper-2:rgba(255,255,255,0.06);
-    --ink:#FAFAFB;
+    --ink:#f0f0f0;
     --ink-soft:#BFBDC6;
-    --ink-faint:#8B8993;
-    --line:rgba(255,255,255,0.10);
-    --line-strong:rgba(255,255,255,0.18);
-    --green:#3DD68C;
-    --green-deep:#2BBE76;
-    --green-pale:rgba(61,214,140,0.16);
-    --red:#FF6B6B;
-    --red-pale:rgba(255,107,107,0.16);
+    --ink-faint:rgba(255,255,255,0.44);
+    --line:rgba(255,255,255,0.07);
+    --line-strong:rgba(255,255,255,0.16);
+    --green:#30d158;
+    --green-deep:#30d158;
+    --green-pale:rgba(48,209,88,0.12);
+    --red:#ff375f;
+    --red-pale:rgba(255,55,95,0.1);
     --amber:#FFB454;
     --amber-pale:rgba(255,180,84,0.16);
-    --card:rgba(255,255,255,0.07);
-    --card-border:rgba(255,255,255,0.14);
+    --card:rgba(255,255,255,0.04);
+    --card-border:rgba(255,255,255,0.07);
     --glass-blur:blur(22px) saturate(160%);
-    --radius:18px;
+    --radius:16px;
     --radius-sm:12px;
-    --mono: 'JetBrains Mono', 'SF Mono', monospace;
+    --mono: 'Inter', -apple-system, sans-serif;
     --sans: 'Inter', -apple-system, 'Segoe UI', Arial, sans-serif;
-    --serif: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
-    --ink-grad: linear-gradient(100deg, #FF7445 0%, #F8418A 38%, #D953D8 64%, #A37FF6 100%);
+    --serif: 'Inter', -apple-system, sans-serif;
+    --ink-grad: linear-gradient(135deg, #ffd60a 0%, #ff9f0a 20%, #ff375f 42%, #bf5af2 65%, #64d2ff 85%, #30d158 100%);
   }
   *{box-sizing:border-box;}
   button, input, select, textarea{color:inherit; font-family:inherit;}
   html,body{margin:0;padding:0;}
   body{
-    background:#0B0B0F;
+    background:#080808;
     color:var(--ink);
     font-family:var(--sans);
     -webkit-font-smoothing:antialiased;
@@ -65,21 +65,18 @@
   }
   .brand{display:flex; align-items:center; gap:10px;}
   .brand .mark{
-    width:30px; height:30px; border-radius:7px;
-    background:var(--ink-grad);
+    width:40px; height:40px; border-radius:10px;
+    background:#181818;
+    border:1px solid rgba(255,255,255,0.16);
     flex-shrink:0;
     position:relative;
-    overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
   }
-  .brand .mark::after{
-    content:"";
-    position:absolute; inset:0;
-    background:repeating-linear-gradient(90deg, rgba(17,17,17,0.55) 0 3px, transparent 3px 7px);
-  }
+  .brand .mark::after{ display:none; }
   .brand h1{
-    font-family:var(--serif);
-    font-weight:800;
-    font-size:25px;
+    font-family:var(--sans);
+    font-weight:700;
+    font-size:18px;
     margin:0;
     letter-spacing:-0.02em;
     background:var(--ink-grad);
@@ -203,11 +200,11 @@
   .btn{
     font-family:var(--sans); font-size:14px; font-weight:600;
     padding:10px 18px; border-radius:var(--radius-sm);
-    border:1px solid var(--green-deep);
-    background:var(--green-deep); color:#06160E;
+    border:none;
+    background:linear-gradient(135deg, #ffd60a, #ff375f, #bf5af2, #64d2ff); color:#000;
     cursor:pointer;
   }
-  .btn:hover{background:var(--green);}
+  .btn:hover{opacity:0.88;}
   .btn.secondary{
     background:var(--green-pale); backdrop-filter:var(--glass-blur); -webkit-backdrop-filter:var(--glass-blur);
     color:var(--green); border:1px solid rgba(61,214,140,0.45);
@@ -338,6 +335,18 @@
   }
   .emp-card .ename{font-weight:600; font-size:14.5px;}
   .emp-card .esub{font-size:12px; color:var(--ink-soft); margin-top:2px;}
+  .emp-point-tag{
+    font-family:var(--sans); font-size:11.5px; font-weight:500;
+    padding:4px 10px; border-radius:20px; cursor:pointer;
+    border:1px solid var(--line-strong); background:var(--card);
+    color:var(--ink-faint); display:inline-flex; align-items:center; gap:5px;
+    transition:all .15s;
+  }
+  .emp-point-tag .dot{width:7px; height:7px; border-radius:50%; flex-shrink:0;}
+  .emp-point-tag.linked{
+    background:var(--green-pale); border-color:rgba(61,214,140,0.45); color:var(--green);
+  }
+  .emp-point-tag:hover{opacity:0.8;}
   .emp-debt{font-family:var(--mono); font-size:17px; font-weight:600;}
   .emp-debt.owe{color:var(--red);}
   .emp-debt.clear{color:var(--ink-faint);}
@@ -411,11 +420,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const POINTS = {
-  yakovleva: {name:'Яковлева 46', sub:'онлайн касса', color:'#3DD68C', acquiring:true, mode:'cashier'},
-  krasnodarskaya: {name:'Краснодарская 37', sub:'онлайн касса', color:'#FFB454', acquiring:true, mode:'cashier'},
-  kalinina: {name:'Калинина 181', sub:'самозанятость', color:'#FF6B6B', acquiring:false, mode:'selfEmployed'},
-};
+let POINTS = {};  // заполняется из таблицы points при loadDB
 
 const SUPABASE_URL = 'https://jkcvofnlqpyygpnwucck.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprY3ZvZm5scXB5eWdwbnd1Y2NrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NzQzMDEsImV4cCI6MjA5NzI1MDMwMX0.ZpaZRxOLciYfChPaQdIhUo42NuJ7yCjtJ78YIc0n48s';
@@ -493,15 +498,28 @@ function showToast(msg){
 }
 
 async function loadDB(){
-  const [records, payouts, cost, employees, movements] = await Promise.all([
+  const [pointsData, records, payouts, cost, employees, movements, empPoints] = await Promise.all([
+    sb('points?select=key,name,sub,color,mode,acquiring&order=sort_order.asc'),
     sb('records?select=point,date,cash,cashless,deduct_pct,staff_pct,employee,z_report&order=date.asc'),
     sb('payouts?select=id,point,employee,date,amount,comment,is_adjustment&order=date.asc'),
     sb('cost_items?select=id,name,price,sheet_cost,ink_cost,staff_pct,pack_cost,pack_qty&order=id.asc'),
     sb('employees?select=id,name,archived&order=name.asc'),
     sb('cash_movements?select=id,point,date,type,amount,comment&order=date.asc'),
+    sb('employee_points?select=employee_id,point_key'),
   ]);
 
-  const byPoint = {yakovleva:[], krasnodarskaya:[], kalinina:[]};
+  // Пересобираем POINTS из БД
+  POINTS = {};
+  pointsData.forEach(p=>{
+    POINTS[p.key] = {name:p.name, sub:p.sub||'', color:p.color||'#3DD68C', mode:p.mode||'cashier', acquiring:!!p.acquiring};
+  });
+  // Если state.point больше не существует — переключаемся на первый доступный
+  if(!POINTS[state.point]){
+    const keys = Object.keys(POINTS);
+    state.point = keys.length ? keys[0] : 'default';
+  }
+
+  const byPoint = {};
   records.forEach(r=>{
     if(!byPoint[r.point]) byPoint[r.point] = [];
     byPoint[r.point].push([
@@ -512,7 +530,7 @@ async function loadDB(){
     ]);
   });
 
-  const payoutsByPoint = {yakovleva:[], krasnodarskaya:[], kalinina:[]};
+  const payoutsByPoint = {};
   payouts.forEach(p=>{
     if(!payoutsByPoint[p.point]) payoutsByPoint[p.point] = [];
     payoutsByPoint[p.point].push({
@@ -521,18 +539,26 @@ async function loadDB(){
     });
   });
 
-  const movementsByPoint = {yakovleva:[], krasnodarskaya:[], kalinina:[]};
+  const movementsByPoint = {};
   movements.forEach(m=>{
     if(!movementsByPoint[m.point]) movementsByPoint[m.point] = [];
     movementsByPoint[m.point].push({id:m.id, date:m.date, type:m.type, amount:Number(m.amount), comment:m.comment||''});
+  });
+
+  // Строим карту: employee_id -> Set<point_key>
+  const empPointsMap = {};
+  empPoints.forEach(ep=>{
+    if(!empPointsMap[ep.employee_id]) empPointsMap[ep.employee_id] = new Set();
+    empPointsMap[ep.employee_id].add(ep.point_key);
   });
 
   DB = {
     records: byPoint,
     payouts: payoutsByPoint,
     cost: cost.map(c=>[c.id, c.name, Number(c.price), Number(c.sheet_cost), Number(c.ink_cost), c.staff_pct!=null ? Number(c.staff_pct) : 30, Number(c.pack_cost)||0, Number(c.pack_qty)||1]),
-    employees: employees.map(e=>({id:e.id, name:e.name, archived:!!e.archived})),
+    employees: employees.map(e=>({id:e.id, name:e.name, archived:!!e.archived, points: empPointsMap[e.id] || new Set()})),
     movements: movementsByPoint,
+    empPointsMap,
   };
 }
 
@@ -658,7 +684,7 @@ function renderHeader(){
   return `
   <header class="top">
     <div class="brand">
-      <span class="mark"></span>
+      <div class="mark"><span style="font-size:14px;font-weight:700;background:var(--ink-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.03em;">ПП</span></div>
       <div>
         <h1>Пункт Печати</h1>
         <div class="tagline">учёт касс</div>
@@ -666,6 +692,7 @@ function renderHeader(){
     </div>
     <div style="display:flex; align-items:center; gap:14px;">
       <div class="clock">${d.toLocaleDateString('ru-RU',{weekday:'short', day:'2-digit', month:'long'})}</div>
+      <button class="btn secondary" id="managePointsBtn" style="padding:6px 12px; font-size:12px;" title="Управление пунктами"><i class="ti ti-building-store"></i></button>
       <button class="btn secondary" id="logoutBtn" style="padding:6px 12px; font-size:12px;"><i class="ti ti-logout"></i></button>
     </div>
   </header>`;
@@ -737,7 +764,7 @@ function renderEntry(){
   const lastDeductPct = lastRow ? lastRow.deductPct : (POINTS[point].acquiring ? 6 : 0);
   const lastStaffPct = lastRow ? lastRow.staffPct : 30;
 
-  const employees = (DB.employees||[]).filter(e=>!e.archived).map(e=>e.name);
+  const employees = (DB.employees||[]).filter(e=>!e.archived && e.points.has(point)).map(e=>e.name);
 
   return `
   <div class="metrics">
@@ -1039,10 +1066,11 @@ function renderStaff(){
   const employees = DB.employees || [];
   const active = employees.filter(e=>!e.archived);
   const archived = employees.filter(e=>e.archived);
+  const allPoints = Object.entries(POINTS);
 
   let html = `<div class="card">
     <h2>Список сотрудников</h2>
-    <p class="hint">Общий справочник для всех точек. Архивные не предлагаются при выборе сотрудника на вкладке «Ввод дня», но остаются в истории и расчётах.</p>
+    <p class="hint">Привяжите сотрудников к нужным точкам — в форме ввода дня будут показываться только они. Сотрудник может быть привязан к нескольким точкам.</p>
     <div class="btnrow" style="margin-bottom:14px;">
       <input type="text" id="newEmpName" placeholder="Имя нового сотрудника" style="flex:1; min-width:160px;">
       <button class="btn" id="addEmpBtn"><i class="ti ti-plus"></i> Добавить</button>
@@ -1052,9 +1080,21 @@ function renderStaff(){
     html += `<p class="hint">Активных сотрудников нет.</p>`;
   }else{
     active.forEach(e=>{
-      html += `<div class="emp-card">
-        <div class="ename">${e.name}</div>
-        <button class="btn secondary" style="font-size:12.5px; padding:6px 12px;" data-archive-emp="${e.id}">В архив</button>
+      const pointTags = allPoints.map(([key, p])=>{
+        const linked = e.points.has(key);
+        return `<button class="emp-point-tag ${linked?'linked':''}"
+          data-link-emp="${e.id}" data-link-point="${key}" data-linked="${linked}"
+          title="${linked?'Отвязать от':'Привязать к'} ${p.name}">
+          <span style="background:${p.color}" class="dot" style="width:7px;height:7px;border-radius:50%;display:inline-block;"></span>
+          ${p.name}
+        </button>`;
+      }).join('');
+      html += `<div class="emp-card" style="flex-direction:column; align-items:flex-start; gap:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+          <div class="ename">${e.name}</div>
+          <button class="btn secondary" style="font-size:12.5px; padding:6px 12px;" data-archive-emp="${e.id}">В архив</button>
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">${pointTags}</div>
       </div>`;
     });
   }
@@ -1259,6 +1299,7 @@ function attachHandlers(){
       renderLogin();
     });
   }
+  document.getElementById('managePointsBtn')?.addEventListener('click', openManagePointsModal);
   document.querySelectorAll('[data-point]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       state.point = btn.dataset.point;
@@ -1330,6 +1371,25 @@ function attachHandlers(){
     });
     document.querySelectorAll('[data-unarchive-emp]').forEach(btn=>{
       btn.addEventListener('click', ()=> setEmployeeArchived(btn.dataset.unarchiveEmp, false));
+    });
+    document.querySelectorAll('[data-link-emp]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const empId = btn.dataset.linkEmp;
+        const pointKey = btn.dataset.linkPoint;
+        const linked = btn.dataset.linked === 'true';
+        try{
+          if(linked){
+            await sb(`employee_points?employee_id=eq.${empId}&point_key=eq.${pointKey}`, {method:'DELETE', prefer:'return=minimal'});
+          }else{
+            await sb('employee_points', {method:'POST', body:JSON.stringify({employee_id:Number(empId), point_key:pointKey}), prefer:'return=minimal'});
+          }
+          await loadDB();
+          render();
+        }catch(e){
+          console.error(e);
+          showToast('Не удалось изменить привязку');
+        }
+      });
     });
   }
 
@@ -1482,6 +1542,118 @@ function confirmDeleteMovement(id){
     render();
   });
   document.getElementById('cancelDelMoveBtn').addEventListener('click', ()=>{
+    document.body.removeChild(overlay);
+  });
+}
+
+function openManagePointsModal(){
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+
+  const pointsList = Object.entries(POINTS).map(([key, p])=>`
+    <div style="display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line);">
+      <span class="dot" style="background:${p.color}; width:10px; height:10px; border-radius:50%; flex-shrink:0;"></span>
+      <div style="flex:1; min-width:0;">
+        <div style="font-weight:600; font-size:14px;">${p.name}</div>
+        <div style="font-size:12px; color:var(--ink-soft);">${p.sub} · ${p.mode==='selfEmployed'?'самозанятость':'онлайн касса'}</div>
+      </div>
+      <button class="btn danger" data-del-point="${key}" style="padding:5px 10px; font-size:12px; flex-shrink:0;"><i class="ti ti-trash"></i></button>
+    </div>`).join('');
+
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:440px;">
+      <h3>Управление пунктами</h3>
+      <div id="pointsListContainer">${pointsList || '<p style="color:var(--ink-faint); font-size:13px;">Нет пунктов</p>'}</div>
+      <div style="margin-top:18px; padding-top:14px; border-top:1px solid var(--line);">
+        <div style="font-weight:600; font-size:13px; margin-bottom:10px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em;">Добавить пункт</div>
+        <div class="field">
+          <label>Название</label>
+          <input type="text" id="newPointName" placeholder="например, Ленина 10">
+        </div>
+        <div class="field">
+          <label>Система расчётов</label>
+          <select id="newPointMode">
+            <option value="cashier">Онлайн касса — как Яковлева и Краснодарская</option>
+            <option value="selfEmployed">Самозанятость — как Калинина</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Цвет маркера</label>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:4px;">
+            ${['#3DD68C','#FFB454','#FF6B6B','#60B0FF','#C07EFF','#FF82C3','#FFD966','#7EC8C8'].map(c=>
+              `<button class="point-color-pick" data-color="${c}" style="width:28px;height:28px;border-radius:50%;background:${c};border:2px solid transparent;cursor:pointer;flex-shrink:0;"></button>`
+            ).join('')}
+          </div>
+          <input type="hidden" id="newPointColor" value="#60B0FF">
+        </div>
+        <div class="btnrow" style="margin-top:14px;">
+          <button class="btn" id="confirmAddPointBtn">Добавить пункт</button>
+          <button class="btn secondary" id="cancelManagePointsBtn">Закрыть</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  // Выбор цвета
+  let selectedColor = '#60B0FF';
+  overlay.querySelectorAll('.point-color-pick').forEach(btn=>{
+    if(btn.dataset.color === selectedColor) btn.style.borderColor = 'var(--ink)';
+    btn.addEventListener('click', ()=>{
+      overlay.querySelectorAll('.point-color-pick').forEach(b=> b.style.borderColor = 'transparent');
+      btn.style.borderColor = 'var(--ink)';
+      selectedColor = btn.dataset.color;
+      document.getElementById('newPointColor').value = selectedColor;
+    });
+  });
+
+  // Удаление пункта
+  overlay.querySelectorAll('[data-del-point]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const key = btn.dataset.delPoint;
+      const p = POINTS[key];
+      if(!confirm(`Удалить пункт «${p.name}»?\n\nВсе данные (записи, выплаты, движения кассы) останутся в базе, но пункт исчезнет из интерфейса.`)) return;
+      try{
+        await sb(`points?key=eq.${key}`, {method:'DELETE', prefer:'return=minimal'});
+        await loadDB();
+        showToast(`Пункт «${p.name}» удалён`);
+        document.body.removeChild(overlay);
+        render();
+      }catch(e){
+        console.error(e);
+        showToast('Не удалось удалить пункт');
+      }
+    });
+  });
+
+  // Добавление пункта
+  document.getElementById('confirmAddPointBtn').addEventListener('click', async ()=>{
+    const name = document.getElementById('newPointName').value.trim();
+    if(!name){ showToast('Введите название пункта'); return; }
+    const mode = document.getElementById('newPointMode').value;
+    const color = document.getElementById('newPointColor').value;
+    const sub = mode === 'selfEmployed' ? 'самозанятость' : 'онлайн касса';
+    const acquiring = mode === 'cashier';
+    // Генерируем ключ из названия (латиница + цифры)
+    const key = 'point_' + Date.now();
+    const sortOrder = Object.keys(POINTS).length + 1;
+    try{
+      await sb('points', {
+        method:'POST',
+        body: JSON.stringify({key, name, sub, color, mode, acquiring, sort_order:sortOrder}),
+        prefer:'return=minimal',
+      });
+      await loadDB();
+      showToast(`Пункт «${name}» добавлен`);
+      document.body.removeChild(overlay);
+      state.point = key;
+      render();
+    }catch(e){
+      console.error(e);
+      showToast('Не удалось добавить пункт');
+    }
+  });
+
+  document.getElementById('cancelManagePointsBtn').addEventListener('click', ()=>{
     document.body.removeChild(overlay);
   });
 }
@@ -1731,13 +1903,23 @@ async function addEmployee(name){
   name = (name||'').trim();
   if(!name){ showToast('Введите имя сотрудника'); return; }
   try{
-    await sb('employees?on_conflict=name', {
+    const res = await sb('employees?on_conflict=name', {
       method:'POST',
       body: JSON.stringify({name, archived:false}),
-      prefer: 'resolution=merge-duplicates,return=minimal',
+      prefer: 'resolution=merge-duplicates,return=representation',
     });
+    // Привязываем нового сотрудника к текущей точке
+    if(res && res.length){
+      const empId = res[0].id;
+      const pointKey = state.point;
+      await sb('employee_points', {
+        method:'POST',
+        body: JSON.stringify({employee_id:empId, point_key:pointKey}),
+        prefer:'return=minimal',
+      });
+    }
     await loadDB();
-    showToast(`Сотрудник «${name}» добавлен`);
+    showToast(`Сотрудник «${name}» добавлен и привязан к ${POINTS[state.point]?.name||''}`);
     render();
   }catch(e){
     console.error(e);
@@ -1765,11 +1947,13 @@ function renderLogin(){
   document.getElementById('app').innerHTML = `
     <div style="display:flex; align-items:center; justify-content:center; min-height:80vh;">
       <div class="card" style="max-width:340px; width:100%; text-align:center;">
-        <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:22px;">
-          <span class="mark"></span>
-          <div style="text-align:left;">
-            <h1 style="font-size:20px;">Пункт Печати</h1>
-            <div class="tagline">учёт касс</div>
+        <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:28px; gap:16px;">
+          <div style="width:64px; height:64px; border-radius:16px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <span style="font-size:26px; font-weight:700; background:var(--ink-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; letter-spacing:-0.03em;">ПП</span>
+          </div>
+          <div style="text-align:center;">
+            <h1 style="font-size:22px; margin:0 0 4px; font-weight:700; background:var(--ink-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Пункт Печати</h1>
+            <div class="tagline" style="text-align:center;">учёт касс</div>
           </div>
         </div>
         <p class="hint" style="margin-bottom:0;">Введите пин-код для входа</p>

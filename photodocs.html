@@ -78,60 +78,18 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-.header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(8,8,8,0.88);
-  backdrop-filter: blur(24px);
-  border-bottom: 1px solid var(--border);
-  padding: 0 20px;
-}
 
-.header-inner {
-  max-width: 1100px;
-  margin: 0 auto;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
 
-.logo-mark {
-  width: 44px; height: 44px;
-  border-radius: 10px;
-  background: var(--surface2);
-  border: 1px solid var(--border-hover);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  text-decoration: none;
-}
 
-.logo-mark span {
-  font-size: 17px; font-weight: 700;
-  background: var(--grad);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: -0.03em;
-}
 
-.header-tagline {
-  font-size: 12px; font-weight: 500;
-  color: var(--text-muted);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
 
-.back-link {
-  margin-left: auto;
-  font-size: 13px;
-  color: var(--text-muted);
-  text-decoration: none;
-  display: flex; align-items: center; gap: 6px;
-  transition: color 0.2s;
-}
-.back-link:hover { color: var(--text); }
+
+
+
+
+
+
+
 
 .container {
   max-width: 900px;
@@ -384,6 +342,90 @@ body {
 @media (max-width: 600px) {
   .step { padding: 20px 16px; }
 }
+
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 800px 600px at 12% -10%, rgba(248,65,138,0.20), transparent 60%),
+    radial-gradient(ellipse 700px 600px at 110% 10%, rgba(163,127,246,0.16), transparent 60%),
+    radial-gradient(ellipse 900px 700px at 50% 110%, rgba(255,116,69,0.10), transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+.header, .container, main, .footer { position: relative; z-index: 1; }
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(8,8,8,0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+}
+.header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.header-tagline {
+  font-size: 12px; font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.footer {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 48px 20px;
+  margin-top: 60px;
+}
+.footer-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 28px;
+}
+.footer-brand { flex: 1; min-width: 250px; }
+.footer-logo {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+  letter-spacing: -0.02em;
+}
+.footer-logo span {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.footer-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+.footer-contacts { display: flex; flex-direction: column; gap: 10px; }
+.footer-link {
+  font-size: 14px; font-weight: 500;
+  color: var(--text); text-decoration: none;
+  transition: color 0.2s ease;
+}
+.footer-link:hover { color: var(--accent); }
+.footer-copy {
+  width: 100%; font-size: 12px;
+  color: var(--text-dim);
+  border-top: 1px solid rgba(255,255,255,0.04);
+  padding-top: 20px; margin-top: 16px;
+}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -391,11 +433,11 @@ body {
 
 <header class="header">
   <div class="header-inner">
-    <a href="index.html" class="logo-mark">
-      <span>ПП</span>
-    </a>
-    <div class="header-tagline">Пункт Печати</div>
-    <a href="index.html" class="back-link">
+    <div style="width:44px; height:44px; border-radius:10px; background:var(--surface2); border:1px solid var(--border-hover); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+      <span style="font-family:Inter,sans-serif; font-size:17px; font-weight:700; background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; letter-spacing:-0.03em;">ПП</span>
+    </div>
+    <span class="header-tagline">Пункт Печати в Красноярске</span>
+    <a href="index.html" style="margin-left:auto; font-size:13px; font-weight:600; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:6px; transition:color 0.2s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'">
       ← На главную
     </a>
   </div>
@@ -774,6 +816,23 @@ function drawCroppedPhoto(ctx, img, dx, dy, dw, dh) {
   ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
 }
 </script>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <h4 class="footer-logo">Пункт <span>Печати</span></h4>
+      <p class="footer-text">Оперативная печать и копировальные услуги в Красноярске. Быстро, качественно, рядом с вами.</p>
+    </div>
+    <div class="footer-contacts">
+      <a href="tel:+79233344112" class="footer-link">+7 (923) 334-41-12</a>
+      <a href="mailto:punkt.pechati@ya.ru" class="footer-link">punkt.pechati@ya.ru</a>
+      <span class="footer-text">Режим работы: Ежедневно 09:00 — 21:00</span>
+    </div>
+    <div class="footer-copy">
+      &copy; 2026 Пункт Печати. Все права защищены.
+    </div>
+  </div>
+</footer>
 
 </body>
 </html>
