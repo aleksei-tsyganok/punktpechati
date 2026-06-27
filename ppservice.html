@@ -284,6 +284,18 @@
   .dc-val{font-family:var(--mono); font-size:13.5px; font-weight:600; text-align:right;}
   .dc-emp{margin-top:10px; padding-top:10px; border-top:1px solid var(--line); font-size:12.5px; color:var(--ink-soft);}
   .dc-cost-input{width:70px; text-align:right; font-family:var(--mono); font-size:13.5px; font-weight:600; padding:2px 4px; background:transparent; border:none; border-bottom:1px solid var(--line-strong); color:var(--ink); border-radius:0;}
+  /* Таблица себестоимости — фиксированная сетка, инпуты на всю ширину ячейки */
+  table.cost-table{table-layout:fixed;}
+  table.cost-table .cost-inp{
+    width:100%; box-sizing:border-box;
+    text-align:right; font-family:var(--mono); font-size:13px;
+    padding:4px 6px; background:rgba(255,255,255,0.06);
+    border:1px solid var(--line-strong); border-radius:6px; color:var(--ink);
+  }
+  table.cost-table .cost-inp:focus{outline:2px solid var(--green); outline-offset:1px; background:rgba(255,255,255,0.10);}
+  table.cost-table td{vertical-align:middle; padding:6px 4px;}
+  table.cost-table th{padding:6px 4px;}
+  table.cost-table .cost-calc{color:var(--ink-soft); text-align:right; font-family:var(--mono); font-size:13px;}
   .rowdel{cursor:pointer; color:var(--ink-faint); font-size:13px;}
   .rowdel:hover{color:var(--red);}
   .zero{color:var(--ink-faint);}
@@ -1137,7 +1149,19 @@ function renderCost(){
   let html = `<div class="card">
     <h2>Себестоимость печати</h2>
     <p class="hint">Материал = упаковка ÷ штук. Маржа и Прибыль считаются автоматически. Остальные поля редактируемые.</p>
-    <div class="tablewrap"><table class="ledger">
+    <div class="tablewrap"><table class="ledger cost-table">
+      <colgroup>
+        <col style="width:18%"><!-- Услуга -->
+        <col style="width:9%"> <!-- Цена -->
+        <col style="width:11%"><!-- Упаковка -->
+        <col style="width:7%"> <!-- Штук -->
+        <col style="width:9%"> <!-- Материал -->
+        <col style="width:9%"> <!-- Краска -->
+        <col style="width:7%"> <!-- ЗП% -->
+        <col style="width:10%"><!-- Расходы -->
+        <col style="width:9%"> <!-- Маржа -->
+        <col style="width:11%"><!-- Прибыль -->
+      </colgroup>
       <thead><tr>
         <th style="text-align:left">Услуга</th>
         <th>Цена, ₽</th>
@@ -1156,19 +1180,19 @@ function renderCost(){
     const material = packQty > 0 ? packCost / packQty : 0;
     const salary = price * (staffPct / 100);
     const expenses = material + ink + salary;
-    const margin = price > 0 ? (price - expenses) / price : 0;
+    const margin = price > 0 ? (price * 0.94 - expenses) / price : 0;
     const profit = price * 0.93 - expenses;
     html += `<tr>
       <td class="emp" style="text-align:left">${name}</td>
-      <td><input type="number" data-cost-id="${id}" data-cost-field="price" value="${price}" style="width:55px; text-align:right; padding:4px 6px; font-size:13px;"></td>
-      <td><input type="number" data-cost-id="${id}" data-cost-field="pack_cost" value="${packCost}" style="width:65px; text-align:right; padding:4px 6px; font-size:13px;"></td>
-      <td><input type="number" data-cost-id="${id}" data-cost-field="pack_qty" value="${packQty}" style="width:48px; text-align:right; padding:4px 6px; font-size:13px;"></td>
-      <td style="color:var(--ink-soft)">${fmt(material)}</td>
-      <td><input type="number" data-cost-id="${id}" data-cost-field="ink_cost" value="${ink}" style="width:52px; text-align:right; padding:4px 6px; font-size:13px;"></td>
-      <td><input type="number" data-cost-id="${id}" data-cost-field="staff_pct" value="${staffPct}" style="width:44px; text-align:right; padding:4px 6px; font-size:13px;"></td>
-      <td>${fmt(expenses)}</td>
-      <td>${(margin * 100).toFixed(1)}%</td>
-      <td>${fmtMoney(profit)}</td>
+      <td><input type="number" data-cost-id="${id}" data-cost-field="price" value="${price}" class="cost-inp"></td>
+      <td><input type="number" data-cost-id="${id}" data-cost-field="pack_cost" value="${packCost}" class="cost-inp"></td>
+      <td><input type="number" data-cost-id="${id}" data-cost-field="pack_qty" value="${packQty}" class="cost-inp"></td>
+      <td class="cost-calc">${fmt(material)}</td>
+      <td><input type="number" data-cost-id="${id}" data-cost-field="ink_cost" value="${ink}" class="cost-inp"></td>
+      <td><input type="number" data-cost-id="${id}" data-cost-field="staff_pct" value="${staffPct}" class="cost-inp"></td>
+      <td class="cost-calc">${fmt(expenses)}</td>
+      <td class="cost-calc">${(margin * 100).toFixed(1)}%</td>
+      <td class="cost-calc">${fmtMoney(profit)}</td>
     </tr>`;
   });
   html += `</tbody></table></div>`;
@@ -1179,7 +1203,7 @@ function renderCost(){
     const material = packQty > 0 ? packCost / packQty : 0;
     const salary = price * (staffPct / 100);
     const expenses = material + ink + salary;
-    const margin = price > 0 ? (price - expenses) / price : 0;
+    const margin = price > 0 ? (price * 0.94 - expenses) / price : 0;
     const profit = price * 0.93 - expenses;
     html += `<div class="day-card">
       <div class="dc-top"><div class="dc-date">${name}</div></div>
@@ -1215,7 +1239,7 @@ function renderCost(){
   });
   html += `</div>`;
 
-  html += `<p class="footnote">Материал = упаковка ÷ штук. Расходы = материал + краска + ЗП. Прибыль = цена × 93% − расходы.</p>
+  html += `<p class="footnote">Материал = упаковка ÷ штук. Расходы = материал + краска + ЗП. Маржа = (цена × 94% − расходы) ÷ цена. Прибыль = цена × 93% − расходы.</p>
   <div class="btnrow" style="margin-top:14px;">
     <button class="btn secondary" id="addCostItemBtn"><i class="ti ti-plus"></i> Добавить услугу</button>
   </div>
