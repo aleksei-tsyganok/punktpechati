@@ -215,6 +215,7 @@ body{
   grid-template-columns:1fr 2fr;
   gap:20px;
   margin-top:0;
+  align-items: stretch;
 }
 
 .branches-label {
@@ -283,11 +284,13 @@ body{
 /* MAP */
 .map {
   width:100%;
-  height:450px;
+  height:100%;
+  min-height: 450px;
   border-radius:16px;
   background: var(--surface);
   overflow: hidden;
   border: 1px solid var(--border);
+  position: relative;
 }
 
 /* UPLOAD */
@@ -776,6 +779,16 @@ textarea { height: 90px; resize: vertical; }
       </div>
     </div>
 
+    <div id="card-4" class="card" onclick="setBranch(4)">
+      <div class="card-inner" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <strong>Лесопарковая 33</strong>
+          <div class="small">Октябрьский</div>
+        </div>
+        <span id="status-4"></span>
+      </div>
+    </div>
+
   </div>
 
   <!-- MAP -->
@@ -1007,11 +1020,12 @@ const branches = [
   {name:"Краснодарская 37", district:"Советский", coords:null},
   {name:"Калинина 181", district:"Октябрьский", coords:null},
   {name:"Лесопарковая 15", district:"Октябрьский", coords:null},
+  {name:"Лесопарковая 33", district:"Октябрьский", coords:null},
 ];
 
 let current = 0;
 let yandexMap;
-let placemarks = [null, null, null, null];
+let placemarks = [null, null, null, null, null];
 
 ymaps.ready(function () {
   yandexMap = new ymaps.Map('map', {
@@ -1244,7 +1258,7 @@ function findNearest(){
     const isOpen = h >= 9 && h < 21;
     const text = isOpen ? 'Открыто до 21:00' : 'Закрыто до 09:00';
     const cls = isOpen ? 'status-open' : 'status-closed';
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 5; i++) {
       const el = document.getElementById('status-' + i);
       if (el) {
         el.textContent = text;
