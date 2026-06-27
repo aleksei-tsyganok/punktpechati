@@ -605,9 +605,9 @@ function generate() {
   ctx.setLineDash([]);
 
   // Сетка-пунктир по всему листу по границам фото
-  ctx.strokeStyle = 'rgba(180,180,180,0.35)';
+  ctx.strokeStyle = 'rgba(150,150,150,0.6)';
   ctx.lineWidth = Math.round(0.2 * ppm);
-  ctx.setLineDash([Math.round(1 * ppm), Math.round(1.5 * ppm)]);
+  ctx.setLineDash([Math.round(1 * ppm), Math.round(3 * ppm)]);
 
   // Вертикальные линии
   for (let c = 0; c <= cols; c++) {
