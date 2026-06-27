@@ -189,6 +189,10 @@
     background:rgba(255,255,255,0.05);
     color:var(--ink);
   }
+  /* Убираем стрелки у числовых полей */
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
+  input[type=number]{ -moz-appearance:textfield; appearance:textfield; }
   select{font-family:var(--sans);}
   select option{background:#18181D; color:var(--ink);}
   input:focus, select:focus{outline:2px solid var(--green); outline-offset:1px;}
@@ -279,6 +283,7 @@
   .dc-label{font-size:11px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.03em;}
   .dc-val{font-family:var(--mono); font-size:13.5px; font-weight:600; text-align:right;}
   .dc-emp{margin-top:10px; padding-top:10px; border-top:1px solid var(--line); font-size:12.5px; color:var(--ink-soft);}
+  .dc-cost-input{width:70px; text-align:right; font-family:var(--mono); font-size:13.5px; font-weight:600; padding:2px 4px; background:transparent; border:none; border-bottom:1px solid var(--line-strong); color:var(--ink); border-radius:0;}
   .rowdel{cursor:pointer; color:var(--ink-faint); font-size:13px;}
   .rowdel:hover{color:var(--red);}
   .zero{color:var(--ink-faint);}
@@ -298,7 +303,9 @@
     background:var(--green-deep); border-color:var(--green-deep); color:#06160E;
   }
   .month-summary{
-    display:flex; gap:18px; flex-wrap:wrap;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px 18px;
     background:var(--paper-2); backdrop-filter:var(--glass-blur); -webkit-backdrop-filter:var(--glass-blur);
     border:1px solid var(--card-border); border-radius:var(--radius-sm);
     padding:14px 16px; margin-bottom:16px;
@@ -367,7 +374,6 @@
     .row3{grid-template-columns:1fr 1fr;}
     header.top{flex-direction:column; align-items:flex-start; padding:20px 0 14px;}
     .brand h1{font-size:21px;}
-    .month-summary{gap:14px 22px;}
     .card{padding:16px;}
     .tabs{gap:0;}
     .tab{padding:10px 11px; font-size:13px;}
@@ -428,7 +434,7 @@ let state = { point:'yakovleva', tab:'entry', selectedMonth:null };
 function fmt(n){
   n = Math.round((n||0)*100)/100;
   if(Object.is(n,-0)) n = 0;
-  return n.toLocaleString('ru-RU', {minimumFractionDigits:0, maximumFractionDigits:2});
+  return n.toLocaleString('ru-RU', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 function fmtMoney(n){ return fmt(n) + ' ₽'; }
 function dateToLocalStr(d){
@@ -474,7 +480,7 @@ async function loadDB(){
   const [records, payouts, cost, employees, movements] = await Promise.all([
     sb('records?select=point,date,cash,cashless,deduct_pct,staff_pct,employee,z_report&order=date.asc'),
     sb('payouts?select=id,point,employee,date,amount,comment,is_adjustment&order=date.asc'),
-    sb('cost_items?select=id,name,price,sheet_cost,ink_cost&order=id.asc'),
+    sb('cost_items?select=id,name,price,sheet_cost,ink_cost,staff_pct,pack_cost,pack_qty&order=id.asc'),
     sb('employees?select=id,name,archived&order=name.asc'),
     sb('cash_movements?select=id,point,date,type,amount,comment&order=date.asc'),
   ]);
@@ -508,7 +514,7 @@ async function loadDB(){
   DB = {
     records: byPoint,
     payouts: payoutsByPoint,
-    cost: cost.map(c=>[c.id, c.name, Number(c.price), Number(c.sheet_cost), Number(c.ink_cost)]),
+    cost: cost.map(c=>[c.id, c.name, Number(c.price), Number(c.sheet_cost), Number(c.ink_cost), c.staff_pct!=null ? Number(c.staff_pct) : 30, Number(c.pack_cost)||0, Number(c.pack_qty)||1]),
     employees: employees.map(e=>({id:e.id, name:e.name, archived:!!e.archived})),
     movements: movementsByPoint,
   };
@@ -1130,24 +1136,38 @@ function renderCost(){
   const cost = DB.cost;
   let html = `<div class="card">
     <h2>Себестоимость печати</h2>
-    <p class="hint">Маржа после налога считается по ставке 7% (УСН доходы 6% + допущение). Можно менять цену продажи.</p>
+    <p class="hint">Материал = упаковка ÷ штук. Маржа и Прибыль считаются автоматически. Остальные поля редактируемые.</p>
     <div class="tablewrap"><table class="ledger">
-      <thead><tr><th style="text-align:left">Услуга</th><th>Цена</th><th>Лист</th><th>Краска</th><th>ЗП (30%)</th><th>Расходы</th><th>Маржа до нал.</th><th>Прибыль</th></tr></thead>
+      <thead><tr>
+        <th style="text-align:left">Услуга</th>
+        <th>Цена, ₽</th>
+        <th>Упаковка, ₽</th>
+        <th>Штук</th>
+        <th>Материал</th>
+        <th>Краска, ₽</th>
+        <th>ЗП, %</th>
+        <th>Расходы</th>
+        <th>Маржа</th>
+        <th>Прибыль</th>
+      </tr></thead>
       <tbody>`;
   cost.forEach(c=>{
-    const [id, name, price, sheet, ink] = c;
-    const salary = price*0.30;
-    const expenses = sheet+ink+salary;
-    const marginBefore = (price-expenses)/price;
-    const profit = price*0.93-expenses;
+    const [id, name, price, , ink, staffPct, packCost, packQty] = c;
+    const material = packQty > 0 ? packCost / packQty : 0;
+    const salary = price * (staffPct / 100);
+    const expenses = material + ink + salary;
+    const margin = price > 0 ? (price - expenses) / price : 0;
+    const profit = price * 0.93 - expenses;
     html += `<tr>
       <td class="emp" style="text-align:left">${name}</td>
-      <td><input type="number" data-cost-price="${id}" value="${price}" style="width:64px; text-align:right; padding:4px 6px; font-size:13px;"></td>
-      <td>${fmt(sheet)}</td>
-      <td>${fmt(ink)}</td>
-      <td>${fmt(salary)}</td>
+      <td><input type="number" data-cost-id="${id}" data-cost-field="price" value="${price}" style="width:55px; text-align:right; padding:4px 6px; font-size:13px;"></td>
+      <td><input type="number" data-cost-id="${id}" data-cost-field="pack_cost" value="${packCost}" style="width:65px; text-align:right; padding:4px 6px; font-size:13px;"></td>
+      <td><input type="number" data-cost-id="${id}" data-cost-field="pack_qty" value="${packQty}" style="width:48px; text-align:right; padding:4px 6px; font-size:13px;"></td>
+      <td style="color:var(--ink-soft)">${fmt(material)}</td>
+      <td><input type="number" data-cost-id="${id}" data-cost-field="ink_cost" value="${ink}" style="width:52px; text-align:right; padding:4px 6px; font-size:13px;"></td>
+      <td><input type="number" data-cost-id="${id}" data-cost-field="staff_pct" value="${staffPct}" style="width:44px; text-align:right; padding:4px 6px; font-size:13px;"></td>
       <td>${fmt(expenses)}</td>
-      <td>${(marginBefore*100).toFixed(1)}%</td>
+      <td>${(margin * 100).toFixed(1)}%</td>
       <td>${fmtMoney(profit)}</td>
     </tr>`;
   });
@@ -1155,32 +1175,50 @@ function renderCost(){
 
   html += `<div class="day-cards">`;
   cost.forEach(c=>{
-    const [id, name, price, sheet, ink] = c;
-    const salary = price*0.30;
-    const expenses = sheet+ink+salary;
-    const marginBefore = (price-expenses)/price;
-    const profit = price*0.93-expenses;
+    const [id, name, price, , ink, staffPct, packCost, packQty] = c;
+    const material = packQty > 0 ? packCost / packQty : 0;
+    const salary = price * (staffPct / 100);
+    const expenses = material + ink + salary;
+    const margin = price > 0 ? (price - expenses) / price : 0;
+    const profit = price * 0.93 - expenses;
     html += `<div class="day-card">
-      <div class="dc-top">
-        <div class="dc-date">${name}</div>
-      </div>
-      <div class="field" style="margin-bottom:10px;">
-        <label style="text-transform:none; font-size:11px;">Цена, ₽</label>
-        <input type="number" data-cost-price="${id}" value="${price}">
-      </div>
+      <div class="dc-top"><div class="dc-date">${name}</div></div>
       <div class="dc-grid">
-        <div class="dc-item"><div class="dc-label">Лист</div><div class="dc-val">${fmt(sheet)}</div></div>
-        <div class="dc-item"><div class="dc-label">Краска</div><div class="dc-val">${fmt(ink)}</div></div>
-        <div class="dc-item"><div class="dc-label">ЗП (30%)</div><div class="dc-val">${fmt(salary)}</div></div>
-        <div class="dc-item"><div class="dc-label">Расходы</div><div class="dc-val">${fmt(expenses)}</div></div>
-        <div class="dc-item"><div class="dc-label">Маржа до нал.</div><div class="dc-val">${(marginBefore*100).toFixed(1)}%</div></div>
+        <div class="dc-item">
+          <div class="dc-label">Цена, ₽</div>
+          <input type="number" data-cost-id="${id}" data-cost-field="price" value="${price}" class="dc-cost-input">
+        </div>
+        <div class="dc-item">
+          <div class="dc-label">Упаковка, ₽</div>
+          <input type="number" data-cost-id="${id}" data-cost-field="pack_cost" value="${packCost}" class="dc-cost-input">
+        </div>
+        <div class="dc-item">
+          <div class="dc-label">Штук в уп.</div>
+          <input type="number" data-cost-id="${id}" data-cost-field="pack_qty" value="${packQty}" class="dc-cost-input">
+        </div>
+        <div class="dc-item">
+          <div class="dc-label">Материал</div>
+          <div class="dc-val" style="color:var(--ink-soft)">${fmt(material)}</div>
+        </div>
+        <div class="dc-item">
+          <div class="dc-label">Краска, ₽</div>
+          <input type="number" data-cost-id="${id}" data-cost-field="ink_cost" value="${ink}" class="dc-cost-input">
+        </div>
+        <div class="dc-item">
+          <div class="dc-label">ЗП, %</div>
+          <input type="number" data-cost-id="${id}" data-cost-field="staff_pct" value="${staffPct}" class="dc-cost-input">
+        </div>
+        <div class="dc-item"><div class="dc-label">Маржа</div><div class="dc-val">${(margin * 100).toFixed(1)}%</div></div>
         <div class="dc-item"><div class="dc-label">Прибыль</div><div class="dc-val">${fmtMoney(profit)}</div></div>
       </div>
     </div>`;
   });
   html += `</div>`;
 
-  html += `<p class="footnote">Расходы = стоимость листа + краска + ЗП сотрудника (30% от цены). Прибыль = цена × 93% − расходы.</p>
+  html += `<p class="footnote">Материал = упаковка ÷ штук. Расходы = материал + краска + ЗП. Прибыль = цена × 93% − расходы.</p>
+  <div class="btnrow" style="margin-top:14px;">
+    <button class="btn secondary" id="addCostItemBtn"><i class="ti ti-plus"></i> Добавить услугу</button>
+  </div>
   </div>`;
   return html;
 }
@@ -1283,21 +1321,23 @@ function attachHandlers(){
   }
 
   if(state.tab==='cost'){
-    document.querySelectorAll('[data-cost-price]').forEach(inp=>{
+    document.querySelectorAll('[data-cost-id][data-cost-field]').forEach(inp=>{
       inp.addEventListener('change', async ()=>{
-        const id = inp.dataset.costPrice;
-        const newPrice = parseFloat(inp.value)||0;
+        const id = inp.dataset.costId;
+        const field = inp.dataset.costField;
+        const val = parseFloat(inp.value)||0;
         try{
-          await sb(`cost_items?id=eq.${id}`, {method:'PATCH', body:JSON.stringify({price:newPrice}), prefer:'return=minimal'});
+          await sb(`cost_items?id=eq.${id}`, {method:'PATCH', body:JSON.stringify({[field]:val}), prefer:'return=minimal'});
           await loadDB();
-          showToast('Цена обновлена');
+          showToast('Сохранено');
           render();
         }catch(e){
           console.error(e);
-          showToast('Не удалось сохранить цену');
+          showToast('Не удалось сохранить');
         }
       });
     });
+    document.getElementById('addCostItemBtn')?.addEventListener('click', openAddCostItemModal);
   }
 }
 
@@ -1415,6 +1455,54 @@ function confirmDeleteMovement(id){
   });
   document.getElementById('cancelDelMoveBtn').addEventListener('click', ()=>{
     document.body.removeChild(overlay);
+  });
+}
+
+function openAddCostItemModal(){
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <h3>Новая услуга</h3>
+      <div class="field">
+        <label>Название услуги</label>
+        <input type="text" id="newCostName" placeholder="например, Ламинация А4">
+      </div>
+      <div class="field">
+        <label>Цена продажи, ₽</label>
+        <input type="number" id="newCostPrice" inputmode="decimal" placeholder="0" step="any">
+      </div>
+      <div class="btnrow">
+        <button class="btn" id="confirmAddCostBtn">Добавить</button>
+        <button class="btn secondary" id="cancelAddCostBtn">Отмена</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const nameInput = document.getElementById('newCostName');
+  nameInput.focus();
+  const close = ()=> document.body.removeChild(overlay);
+  document.getElementById('confirmAddCostBtn').addEventListener('click', async ()=>{
+    const name = nameInput.value.trim();
+    if(!name){ showToast('Введите название услуги'); return; }
+    const price = parseFloat(document.getElementById('newCostPrice').value) || 0;
+    try{
+      await sb('cost_items', {
+        method:'POST',
+        body: JSON.stringify({name, price, sheet_cost:0, ink_cost:0, staff_pct:30, pack_cost:0, pack_qty:1}),
+        prefer: 'return=minimal',
+      });
+      await loadDB();
+      showToast(`Услуга «${name}» добавлена`);
+      close();
+      render();
+    }catch(e){
+      console.error(e);
+      showToast('Не удалось добавить — возможно, услуга с таким названием уже есть');
+    }
+  });
+  document.getElementById('cancelAddCostBtn').addEventListener('click', close);
+  nameInput.addEventListener('keydown', e=>{
+    if(e.key==='Enter') document.getElementById('confirmAddCostBtn').click();
   });
 }
 
@@ -1700,7 +1788,15 @@ function renderLogin(){
   });
 
   document.querySelector('.card').addEventListener('click', ()=> hiddenInput.focus());
-  hiddenInput.focus();
+  // На мобильном — автофокус сразу, чтобы вылезала клавиатура
+  // На десктопе тоже фокусируем, но без клавиатуры это безопасно
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if(isMobile){
+    // Небольшая задержка нужна чтобы iOS успел отрисовать DOM перед focus()
+    setTimeout(()=> hiddenInput.focus(), 120);
+  } else {
+    hiddenInput.focus();
+  }
 }
 
 function renderLoadError(message){
