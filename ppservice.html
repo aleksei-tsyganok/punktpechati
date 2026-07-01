@@ -394,7 +394,22 @@
 
   @media (max-width:600px){
     .app{padding:0 12px 90px;}
-    .points{grid-template-columns:1fr; }
+    .points{
+      grid-template-columns: 1fr;
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      gap: 10px;
+      padding-bottom: 8px;
+      scrollbar-width: none;
+    }
+    .points::-webkit-scrollbar { display: none; }
+    .point-btn {
+      scroll-snap-align: center;
+      flex: 0 0 85vw;
+      max-width: 340px;
+    }
     .row2{grid-template-columns:1fr 1fr; gap:10px;}
     .row3{grid-template-columns:1fr 1fr;}
     header.top{flex-direction:column; align-items:flex-start; padding:20px 0 14px;}
@@ -2000,6 +2015,7 @@ function renderLogin(){
   });
 
   document.querySelector('.card').addEventListener('click', ()=> hiddenInput.focus());
+  hiddenInput.focus();
   // На мобильном — автофокус сразу, чтобы вылезала клавиатура
   // На десктопе тоже фокусируем, но без клавиатуры это безопасно
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
