@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#ffd60a"/>
+      <stop offset="20%"  stop-color="#ff9f0a"/>
+      <stop offset="42%"  stop-color="#ff375f"/>
+      <stop offset="65%"  stop-color="#bf5af2"/>
+      <stop offset="85%"  stop-color="#64d2ff"/>
+      <stop offset="100%" stop-color="#30d158"/>
+    </linearGradient>
+    <clipPath id="clip">
+      <rect width="120" height="120" rx="24" ry="24"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="120" height="120" rx="24" ry="24" fill="#111111"/>
+
+  <!-- Border -->
+  <rect x="1" y="1" width="118" height="118" rx="23" ry="23" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+
+  <!-- ПП text with gradient -->
+  <text
+    x="60" y="74"
+    text-anchor="middle"
+    font-family="Inter, -apple-system, sans-serif"
+    font-weight="700"
+    font-size="52"
+    letter-spacing="-2"
+    fill="url(#grad)"
+  >ПП</text>
+</svg>
