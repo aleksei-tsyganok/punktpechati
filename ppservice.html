@@ -707,10 +707,39 @@ function render(){
       pc.style.webkitOverflowScrolling = 'touch';
       pc.style.gap = '10px';
       pc.style.paddingBottom = '8px';
-      pc.querySelectorAll('.point-btn').forEach(btn => {
+      const btns = pc.querySelectorAll('.point-btn');
+      btns.forEach(btn => {
         btn.style.flex = '0 0 88vw';
         btn.style.minWidth = '0';
         btn.style.scrollSnapAlign = 'start';
+      });
+
+      // Скроллим к активной карточке без перерендера
+      const activeBtn = pc.querySelector('.point-btn.active');
+      if (activeBtn) {
+        setTimeout(() => activeBtn.scrollIntoView({behavior:'instant', block:'nearest', inline:'start'}), 0);
+      }
+
+      // При остановке свайпа — выбираем видимую карточку
+      let scrollTimer;
+      pc.addEventListener('scroll', () => {
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(() => {
+          const containerLeft = pc.getBoundingClientRect().left;
+          let closest = null, minDist = Infinity;
+          pc.querySelectorAll('.point-btn').forEach(btn => {
+            const dist = Math.abs(btn.getBoundingClientRect().left - containerLeft);
+            if (dist < minDist) { minDist = dist; closest = btn; }
+          });
+          if (closest && closest.dataset.point !== state.point) {
+            state.point = closest.dataset.point;
+            state.selectedMonth = null;
+            // Обновляем только активный класс и контент вкладки без полного перерендера
+            pc.querySelectorAll('.point-btn').forEach(b => b.classList.toggle('active', b.dataset.point === state.point));
+            document.getElementById('tabContent').innerHTML = renderTabContent();
+            attachTabHandlers();
+          }
+        }, 100);
       });
     }
   }
@@ -1326,6 +1355,18 @@ function renderCost(){
   </div>
   </div>`;
   return html;
+}
+
+function attachTabHandlers(){
+  document.querySelectorAll('[data-tab]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.tab = btn.dataset.tab;
+      render();
+    });
+  });
+  if(state.tab==='entry'){
+    setupEntryHandlers();
+  }
 }
 
 function attachHandlers(){
