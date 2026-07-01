@@ -395,8 +395,9 @@
   @media (max-width:600px){
     .app{padding:0 12px 90px;}
     .points{
-      grid-template-columns: 1fr;
-      display: flex;
+      display: flex !important;
+      flex-direction: row !important;
+      grid-template-columns: unset !important;
       overflow-x: auto;
       scroll-snap-type: x mandatory;
       -webkit-overflow-scrolling: touch;
@@ -406,8 +407,10 @@
     }
     .points::-webkit-scrollbar { display: none; }
     .point-btn {
-      scroll-snap-align: center;
-      flex: 0 0 85vw;
+      scroll-snap-align: start;
+      flex: 0 0 88vw !important;
+      min-width: 0 !important;
+      width: 88vw !important;
       max-width: 340px;
     }
     .row2{grid-template-columns:1fr 1fr; gap:10px;}
@@ -692,6 +695,25 @@ function render(){
     <div id="tabContent">${renderTabContent()}</div>
   `;
   attachHandlers();
+
+  // Свайп на мобильном — применяем инлайн стили после рендера
+  if (window.innerWidth <= 600) {
+    const pc = document.getElementById('pointsContainer');
+    if (pc) {
+      pc.style.display = 'flex';
+      pc.style.flexDirection = 'row';
+      pc.style.overflowX = 'auto';
+      pc.style.scrollSnapType = 'x mandatory';
+      pc.style.webkitOverflowScrolling = 'touch';
+      pc.style.gap = '10px';
+      pc.style.paddingBottom = '8px';
+      pc.querySelectorAll('.point-btn').forEach(btn => {
+        btn.style.flex = '0 0 88vw';
+        btn.style.minWidth = '0';
+        btn.style.scrollSnapAlign = 'start';
+      });
+    }
+  }
 }
 
 function renderHeader(){
@@ -714,7 +736,7 @@ function renderHeader(){
 }
 
 function renderPointSwitcher(){
-  let html = '<div class="points">';
+  let html = '<div class="points" id="pointsContainer">';
   for(const key in POINTS){
     const p = POINTS[key];
     const bal = currentBalance(key);
