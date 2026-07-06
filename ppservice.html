@@ -694,7 +694,8 @@ function switchPoint(key){
   // Обновляем только контент вкладки
   const tc = document.getElementById('tabContent');
   if(tc) tc.innerHTML = renderTabContent();
-  attachTabHandlers();
+  // Подключаем все обработчики для текущей вкладки
+  attachHandlers();
 }
 
 function render(){
@@ -710,7 +711,8 @@ function render(){
   // Свайп на мобильном
   if (window.innerWidth <= 600) {
     const pc = document.getElementById('pointsContainer');
-    if (pc) {
+    if (pc && !pc._swipeAttached) {
+      pc._swipeAttached = true;
       pc.style.display = 'flex';
       pc.style.flexDirection = 'row';
       pc.style.overflowX = 'auto';
@@ -746,6 +748,13 @@ function render(){
             switchPoint(closest.dataset.point);
           }
         }, 150);
+      });
+    } else if (pc) {
+      // Просто обновляем стили карточек
+      pc.querySelectorAll('.point-btn').forEach(btn => {
+        btn.style.flex = '0 0 88vw';
+        btn.style.minWidth = '0';
+        btn.style.scrollSnapAlign = 'start';
       });
     }
   }
