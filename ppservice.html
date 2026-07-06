@@ -683,6 +683,20 @@ function employeeSummary(point){
   }).sort((a,b)=> b.balance - a.balance);
 }
 
+
+function switchPoint(key){
+  state.point = key;
+  state.selectedMonth = null;
+  // Обновляем активный класс карточек без перерендера
+  document.querySelectorAll('.point-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.point === key);
+  });
+  // Обновляем только контент вкладки
+  const tc = document.getElementById('tabContent');
+  if(tc) tc.innerHTML = renderTabContent();
+  attachTabHandlers();
+}
+
 function render(){
   const app = document.getElementById('app');
   app.innerHTML = `
@@ -1317,9 +1331,10 @@ function attachHandlers(){
   document.getElementById('managePointsBtn')?.addEventListener('click', openManagePointsModal);
   document.querySelectorAll('[data-point]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
+      if(btn.dataset.point === state.point) return;
       state.point = btn.dataset.point;
       state.selectedMonth = null;
-      render();
+      switchPoint(btn.dataset.point);
     });
   });
   document.querySelectorAll('[data-tab]').forEach(btn=>{
