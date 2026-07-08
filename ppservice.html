@@ -681,6 +681,21 @@ function employeeSummary(point){
   }).sort((a,b)=> b.balance - a.balance);
 }
 
+
+function switchPoint(key){
+  state.point = key;
+  state.selectedMonth = null;
+  // Обновляем активный класс карточек без перерендера
+  document.querySelectorAll('.point-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.point === key);
+  });
+  // Обновляем только контент вкладки
+  const tc = document.getElementById('tabContent');
+  if(tc) tc.innerHTML = renderTabContent();
+  // Подключаем все обработчики для текущей вкладки
+  attachHandlers();
+}
+
 function render(){
   const app = document.getElementById('app');
   app.innerHTML = `
@@ -690,6 +705,57 @@ function render(){
     <div id="tabContent">${renderTabContent()}</div>
   `;
   attachHandlers();
+
+  // Свайп на мобильном
+  if (window.innerWidth <= 600) {
+    const pc = document.getElementById('pointsContainer');
+    if (pc && !pc._swipeAttached) {
+      pc._swipeAttached = true;
+      pc.style.display = 'flex';
+      pc.style.flexDirection = 'row';
+      pc.style.overflowX = 'auto';
+      pc.style.scrollSnapType = 'x mandatory';
+      pc.style.webkitOverflowScrolling = 'touch';
+      pc.style.gap = '10px';
+      pc.style.paddingBottom = '8px';
+      const btns = pc.querySelectorAll('.point-btn');
+      btns.forEach(btn => {
+        btn.style.flex = '0 0 88vw';
+        btn.style.minWidth = '0';
+        btn.style.scrollSnapAlign = 'start';
+      });
+
+      // Скроллим к активной карточке
+      const activeBtn = pc.querySelector('.point-btn.active');
+      if (activeBtn) {
+        setTimeout(() => activeBtn.scrollIntoView({behavior:'instant', block:'nearest', inline:'start'}), 0);
+      }
+
+      // При остановке свайпа — определяем видимую карточку
+      let scrollTimer;
+      pc.addEventListener('scroll', () => {
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(() => {
+          const containerLeft = pc.getBoundingClientRect().left;
+          let closest = null, minDist = Infinity;
+          pc.querySelectorAll('.point-btn').forEach(btn => {
+            const dist = Math.abs(btn.getBoundingClientRect().left - containerLeft);
+            if (dist < minDist) { minDist = dist; closest = btn; }
+          });
+          if (closest && closest.dataset.point !== state.point) {
+            switchPoint(closest.dataset.point);
+          }
+        }, 150);
+      });
+    } else if (pc) {
+      // Просто обновляем стили карточек
+      pc.querySelectorAll('.point-btn').forEach(btn => {
+        btn.style.flex = '0 0 88vw';
+        btn.style.minWidth = '0';
+        btn.style.scrollSnapAlign = 'start';
+      });
+    }
+  }
 }
 
 function renderHeader(){
@@ -712,7 +778,7 @@ function renderHeader(){
 }
 
 function renderPointSwitcher(){
-  let html = '<div class="points">';
+  let html = '<div class="points" id="pointsContainer">';
   for(const key in POINTS){
     const p = POINTS[key];
     const bal = currentBalance(key);
@@ -1315,9 +1381,10 @@ function attachHandlers(){
   document.getElementById('managePointsBtn')?.addEventListener('click', openManagePointsModal);
   document.querySelectorAll('[data-point]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
+      if(btn.dataset.point === state.point) return;
       state.point = btn.dataset.point;
       state.selectedMonth = null;
-      render();
+      switchPoint(btn.dataset.point);
     });
   });
   document.querySelectorAll('[data-tab]').forEach(btn=>{
@@ -1563,14 +1630,17 @@ function openManagePointsModal(){
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
 
+  const COLORS = ['#3DD68C','#FFB454','#FF6B6B','#60B0FF','#C07EFF','#FF82C3','#FFD966','#7EC8C8'];
   const pointsList = Object.entries(POINTS).map(([key, p])=>`
-    <div style="display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line);">
-      <span class="dot" style="background:${p.color}; width:10px; height:10px; border-radius:50%; flex-shrink:0;"></span>
+    <div style="display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid var(--line);">
       <div style="flex:1; min-width:0;">
         <div style="font-weight:600; font-size:14px;">${p.name}</div>
-        <div style="font-size:12px; color:var(--ink-soft);">${p.sub} · ${p.mode==='selfEmployed'?'самозанятость':'онлайн касса'}</div>
+        <div style="font-size:12px; color:var(--ink-soft); margin-bottom:8px;">${p.sub} · ${p.mode==='selfEmployed'?'самозанятость':'онлайн касса'}</div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+          ${COLORS.map(c=>`<button class="point-color-pick-existing" data-point-key="${key}" data-color="${c}" style="width:22px;height:22px;border-radius:50%;background:${c};border:3px solid ${c===p.color?'white':'transparent'};cursor:pointer;flex-shrink:0;transition:border-color .15s;"></button>`).join('')}
+        </div>
       </div>
-      <button class="btn danger" data-del-point="${key}" style="padding:5px 10px; font-size:12px; flex-shrink:0;"><i class="ti ti-trash"></i></button>
+      <button class="btn danger" data-del-point="${key}" style="padding:5px 10px; font-size:12px; flex-shrink:0; margin-top:4px;"><i class="ti ti-trash"></i></button>
     </div>`).join('');
 
   overlay.innerHTML = `
@@ -1634,6 +1704,25 @@ function openManagePointsModal(){
       }catch(e){
         console.error(e);
         showToast('Не удалось удалить пункт');
+      }
+    });
+  });
+
+  // Смена цвета существующего пункта
+  overlay.querySelectorAll('.point-color-pick-existing').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const key = btn.dataset.pointKey;
+      const color = btn.dataset.color;
+      try{
+        await sb(`points?key=eq.${key}`, {method:'PATCH', body:JSON.stringify({color}), prefer:'return=minimal'});
+        await loadDB();
+        showToast('Цвет обновлён');
+        document.body.removeChild(overlay);
+        render();
+        openManagePointsModal();
+      }catch(e){
+        console.error(e);
+        showToast('Не удалось обновить цвет');
       }
     });
   });
@@ -2013,8 +2102,10 @@ function renderLogin(){
   });
 
   document.querySelector('.card').addEventListener('click', ()=> hiddenInput.focus());
+  // Показываем кнопку для вызова клавиатуры на мобильном (iOS блокирует авто-фокус)
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   if(isMobile){
+    // Добавляем кнопку под точками
     const tapBtn = document.createElement('button');
     tapBtn.textContent = 'Нажмите для ввода';
     tapBtn.style.cssText = 'margin-top:16px; padding:12px 28px; border-radius:12px; background:linear-gradient(135deg,#ffd60a,#ff375f,#bf5af2,#64d2ff); border:none; color:#000; font-family:var(--sans); font-weight:700; font-size:14px; cursor:pointer; width:100%;';
