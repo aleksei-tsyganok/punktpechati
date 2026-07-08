@@ -446,7 +446,6 @@ async function sb(path, options={}){
   const res = await fetch(`${SUPABASE_URL}/${path}`, {
     ...options,
     headers:{
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
       'Content-Type': 'application/json',
       'Prefer': options.prefer || 'return=representation',
       ...(options.headers||{}),
@@ -2063,4 +2062,5 @@ async function boot(){
 </script>
 </body>
 </html>
+
 
